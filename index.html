@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>丹凤三小·智能均衡分班系统 v3.6</title>
+<title>丹凤三小·智能均衡分班系统 v3.7</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <style>
@@ -88,6 +88,63 @@
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white; box-shadow: 0 4px 12px rgba(13,148,136,0.3); font-weight: 600;
         }
+        /* 带序号的彩色菜单按钮：每个菜单独立底色，区分四个步骤 */
+        .tab-btn[data-tab] { position: relative; }
+        .tab-num {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 20px; height: 20px; border-radius: 50%;
+            background: rgba(255,255,255,0.9); font-size: 12px; font-weight: 800;
+            margin-right: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.18);
+        }
+        /* 1 学生管理 — 翡翠绿（高饱和、常驻实色，最醒目） */
+        .tab-btn.tab-1 { background: #14b8a6; color: #fff; box-shadow: 0 3px 10px rgba(20,184,166,0.45); }
+        .tab-btn.tab-1:hover { background: #0d9488; }
+        .tab-btn.tab-1.active { background: linear-gradient(135deg,#2dd4bf,#0d9488); color: #fff; box-shadow: 0 6px 18px rgba(13,148,136,0.5); }
+        /* 2 分班策略 — 蓝 */
+        .tab-btn.tab-2 { background: #3b82f6; color: #fff; box-shadow: 0 3px 10px rgba(59,130,246,0.45); }
+        .tab-btn.tab-2:hover { background: #2563eb; }
+        .tab-btn.tab-2.active { background: linear-gradient(135deg,#60a5fa,#2563eb); color: #fff; box-shadow: 0 6px 18px rgba(37,99,235,0.5); }
+        /* 3 分班结果 — 橙 */
+        .tab-btn.tab-3 { background: #f97316; color: #fff; box-shadow: 0 3px 10px rgba(249,115,22,0.45); }
+        .tab-btn.tab-3:hover { background: #ea580c; }
+        .tab-btn.tab-3.active { background: linear-gradient(135deg,#fb923c,#ea580c); color: #fff; box-shadow: 0 6px 18px rgba(234,88,12,0.5); }
+        /* 4 均衡看板 — 紫 */
+        .tab-btn.tab-4 { background: #a855f7; color: #fff; box-shadow: 0 3px 10px rgba(168,85,247,0.45); }
+        .tab-btn.tab-4:hover { background: #9333ea; }
+        .tab-btn.tab-4.active { background: linear-gradient(135deg,#c084fc,#9333ea); color: #fff; box-shadow: 0 6px 18px rgba(147,51,234,0.5); }
+        /* 序号角标：白底 + 该菜单深色数字，实色按钮上也清晰 */
+        .tab-btn .tab-num { background: #fff; color: #0f766e; box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
+        .tab-btn.tab-1 .tab-num { color: #0d9488; }
+        .tab-btn.tab-2 .tab-num { color: #2563eb; }
+        .tab-btn.tab-3 .tab-num { color: #ea580c; }
+        .tab-btn.tab-4 .tab-num { color: #9333ea; }
+        /* 数据导入导出工具条：常驻于四个菜单下方 */
+        .data-toolbar {
+            display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 12px 16px; margin-bottom: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .data-toolbar .tb-label {
+            font-size: 13px; font-weight: 800; color: var(--text);
+            display: flex; align-items: center; gap: 6px; margin-right: 4px;
+            padding-right: 12px; border-right: 1px dashed var(--border);
+        }
+        /* 工具条按钮：各自不同颜色，相邻不同；可整行缩放，过窄自动换行 */
+        .data-toolbar .tb-btn {
+            border: none; border-radius: var(--radius-sm); cursor: pointer;
+            font-size: 13px; font-weight: 700; color: #fff; padding: 9px 15px;
+            display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+            transition: transform .2s ease, box-shadow .25s ease, filter .2s ease;
+        }
+        .data-toolbar .tb-btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+        .data-toolbar .tb-btn:active { transform: scale(0.95); }
+        .data-toolbar .tb-right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+        .tb-cyan   { background: #06b6d4; box-shadow: 0 3px 9px rgba(6,182,212,0.42); }
+        .tb-indigo { background: #6366f1; box-shadow: 0 3px 9px rgba(99,102,241,0.42); }
+        .tb-red    { background: #ef4444; box-shadow: 0 3px 9px rgba(239,68,68,0.42); }
+        .tb-pink   { background: #ec4899; box-shadow: 0 3px 9px rgba(236,72,153,0.42); }
+        .tb-amber  { background: #f59e0b; box-shadow: 0 3px 9px rgba(245,158,11,0.42); }
         .tab-content {
             display: none; background: var(--card-bg); padding: 24px;
             border-radius: var(--radius-lg); box-shadow: var(--shadow);
@@ -230,7 +287,7 @@
         .close-btn:hover { color: var(--danger); background: #fef2f2; }
         .loading-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.85); backdrop-filter: blur(12px); display: none; justify-content: center; align-items: center; z-index: 99999; flex-direction: column; color: white; }
         .progress-container { width: 85%; max-width: 520px; height: 10px; background: rgba(255,255,255,0.15); border-radius: 5px; margin: 28px 0; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2); }
-        .progress-bar { height: 100%; background: linear-gradient(90deg, #f472b6, #a78bfa, #60a5fa, #34d399, #fbbf24, #f472b6); width: 0%; transition: width 0.3s; border-radius: 5px; background-size: 300% 100%; animation: shimmer 3s linear infinite; box-shadow: 0 0 12px rgba(96,165,250,0.5); }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #f472b6, #a78bfa, #60a5fa, #34d399, #fbbf24, #f472b6); width: 0%; transition: width 0.6s ease; border-radius: 5px; background-size: 300% 100%; animation: shimmer 3s linear infinite; box-shadow: 0 0 12px rgba(96,165,250,0.5); }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .loading-text { font-size: 20px; margin-bottom: 12px; font-weight: 600; }
         .loading-subtext { font-size: 14px; color: rgba(255,255,255,0.7); margin-top: 14px; }
@@ -264,11 +321,11 @@
     
 </style>
 </head>
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" data-protection="v3.6">
-    <meta http-equiv="Pragma" content="no-cache" data-protection="v3.6">
-    <meta http-equiv="Expires" content="0" data-protection="v3.6">
-    <meta http-equiv="X-Frame-Options" content="DENY" data-protection="v3.6">
-    <style data-protection="v3.6">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" data-protection="v3.7">
+    <meta http-equiv="Pragma" content="no-cache" data-protection="v3.7">
+    <meta http-equiv="Expires" content="0" data-protection="v3.7">
+    <meta http-equiv="X-Frame-Options" content="DENY" data-protection="v3.7">
+    <style data-protection="v3.7">
         html, body { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
         input, textarea, select, [contenteditable="true"] { -webkit-user-select: text !important; -moz-user-select: text !important; -ms-user-select: text !important; user-select: text !important; }
         /* ===== 按钮缩放动画 ===== */
@@ -280,11 +337,11 @@
         .tab-btn:active { transform: scale(0.95); }
         .lock-btn:active { transform: scale(0.9); }
         /* ===== 下一步操作提示（脉冲高亮） ===== */
-        @keyframes guidePulse { 0%,100% { box-shadow: 0 0 0 0 rgba(13,148,136,.6); transform: scale(1); } 50% { box-shadow: 0 0 0 12px rgba(13,148,136,0); transform: scale(1.06); } }
-        .guide-next { animation: guidePulse 1.6s ease-in-out infinite; position: relative; z-index: 10; }
+        @keyframes guidePulse { 0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,.75); transform: scale(1); } 50% { box-shadow: 0 0 0 14px rgba(245,158,11,0); transform: scale(1.08); } }
+        .guide-next { animation: guidePulse 1.5s ease-in-out infinite; position: relative; z-index: 10; outline: 2px solid rgba(245,158,11,.65); }
     </style>
-    <script data-protection="v3.6">
-/* 智能分班·积分均衡版 v3.6 代码保护层（被动拦截，不影响软件运行） */
+    <script data-protection="v3.7">
+/* 智能分班·积分均衡版 v3.7 代码保护层（被动拦截，不影响软件运行） */
 (function(){
   "use strict";
   function _edt(t){ if(!t||!t.tagName) return false; var n=t.tagName.toUpperCase(); if(n==="INPUT"||n==="TEXTAREA"||n==="SELECT") return true; if(t.isContentEditable) return true; return false; }
@@ -325,7 +382,7 @@
 </div>
 <div class="container">
     <div class="header">
-        <h1><i class="fas fa-graduation-cap"></i> 丹凤三小·智能均衡分班系统 v3.6 <span class="algorithm-badge"><i class="fas fa-fire"></i> 蛇形初分+模拟退火+定向均衡微调</span></h1>
+        <h1><i class="fas fa-graduation-cap"></i> 丹凤三小·智能均衡分班系统 v3.7 <span class="algorithm-badge"><i class="fas fa-fire"></i> 蛇形初分+模拟退火+单科优先均衡微调</span></h1>
         <button class="help-btn" onclick="toggleHelp(event)" title="使用说明"><i class="fas fa-question"></i></button>
         <div class="help-popup" id="helpPopup">
             <p><b>快速开始：</b>①添加/导入学生 → ②设置班级数/均衡条件 → ③开始智能分班 → ④查看结果/看板</p>
@@ -338,10 +395,21 @@
         </div>
     </div>
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('student', this)"><i class="fas fa-users"></i> 学生管理</button>
-        <button class="tab-btn" onclick="switchTab('setting', this)"><i class="fas fa-cogs"></i> 分班策略</button>
-        <button class="tab-btn" onclick="switchTab('result', this)"><i class="fas fa-table"></i> 分班结果</button>
-        <button class="tab-btn" onclick="switchTab('chart', this)"><i class="fas fa-chart-bar"></i> 均衡看板</button>
+        <button class="tab-btn tab-1 active guide-next" data-tab="student" onclick="switchTab('student', this)"><span class="tab-num">1</span><i class="fas fa-users"></i> 学生管理</button>
+        <button class="tab-btn tab-2 guide-next" data-tab="setting" onclick="switchTab('setting', this)"><span class="tab-num">2</span><i class="fas fa-cogs"></i> 分班策略</button>
+        <button class="tab-btn tab-3 guide-next" data-tab="result" onclick="switchTab('result', this)"><span class="tab-num">3</span><i class="fas fa-table"></i> 分班结果</button>
+        <button class="tab-btn tab-4 guide-next" data-tab="chart" onclick="switchTab('chart', this)"><span class="tab-num">4</span><i class="fas fa-chart-bar"></i> 均衡看板</button>
+    </div>
+    <div class="data-toolbar">
+        <span class="tb-label"><i class="fas fa-sync-alt"></i> 数据导入导出</span>
+        <button class="tb-btn tb-cyan" id="btnDownloadTemplate" onclick="downloadTemplate()"><i class="fas fa-download"></i> 下载XLSX模板</button>
+        <button class="tb-btn tb-indigo" id="btnUploadXlsx" onclick="document.getElementById('fileInput').click()"><i class="fas fa-upload"></i> 上传XLSX导入</button>
+        <button class="tb-btn tb-red" onclick="clearData()"><i class="fas fa-trash"></i> 清空所有数据</button>
+        <div class="tb-right">
+            <button class="tb-btn tb-pink" onclick="generateDemoData()"><i class="fas fa-magic"></i> 生成演示数据</button>
+            <button class="tb-btn tb-amber" onclick="fillFullDemo()"><i class="fas fa-database"></i> 一键填充200条</button>
+        </div>
+        <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none" onchange="importFile(event)">
     </div>
     <div class="tab-content active" id="student">
         <div class="card">
@@ -364,17 +432,6 @@
             </div>
             <div class="btn-group">
                 <button class="btn btn-primary" onclick="addStudent()"><i class="fas fa-save"></i> 保存学生</button>
-                <button class="btn btn-info" onclick="generateDemoData()"><i class="fas fa-magic"></i> 生成演示数据</button>
-                <button class="btn btn-warning" onclick="fillFullDemo()"><i class="fas fa-database"></i> 一键填充100条</button>
-            </div>
-        </div>
-        <div class="card">
-            <div class="card-title"><i class="fas fa-file-import"></i> 数据导入导出</div>
-            <div class="btn-group">
-                <button class="btn btn-secondary" onclick="downloadTemplate()"><i class="fas fa-download"></i> 下载XLSX模板</button>
-                <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()"><i class="fas fa-upload"></i> 上传XLSX导入</button>
-                <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none" onchange="importFile(event)">
-                <button class="btn btn-light" onclick="clearData()"><i class="fas fa-trash"></i> 清空所有数据</button>
             </div>
         </div>
         <div class="card">
@@ -499,7 +556,7 @@
                 <p style="margin-left:16px;">- 均衡评价时统计各班各科目A/B/学困的总人次；</p>
                 <p>4. 同名/谐音打散：内置400+汉字拼音映射表，将姓名转为拼音键进行比对，同名或谐音学生尽量分到不同班级。</p>
                 <p>5. 算法流程：①锁定保护 → ②按性别蛇形分层初分(男女生绝对均衡) → ③多重启模拟退火 → ④定向计数修复(A/B/A+B/学困人数极差≤1) → ⑤最速下降精调 → ⑥软指标极差精修 → ⑦定向互补微调(A+B多则人均分稍低 / A档多则B档少 / A+B多则学困多) → ⑧总分专项微调(压制总分最高班) → ⑨总积分极差≤0.5验收，不达标自动换种子重新分班（多结果选最优）。</p>
-                <p>6. 计数均衡（v3.6 核心）：A档、纯B档、A+B档、学困 人数极差均≤1（可整除时压向0）；人均分极差控制在 2.5 分内；A+B 和为主导权重——极差最小，可整除时压向0、不可整除停在1；A与B反向互补（A多则B少，保证A+B和均衡）；A+B多则学困生多（同向，差生与优等生均衡）；学困极差也最小。硬约束：人数差≤1、男女生绝对相等(构造保证)、单科A/纯B/A+B/学困人数极差≤1、单科均分方差<1。差距很小无法调整时自然收敛、不强行破坏其它均衡。</p>
+                <p>6. 单科优先（v3.7 核心）：各科 A档、纯B档、A+B档、学困 人数极差均≤1（可整除时压向0）；单科均分极差最小化（首要目标）；A+B 和为主导权重——极差最小，可整除时压向0、不可整除停在1；A与B反向互补（A多则B少，保证A+B和均衡）；A+B多则学困生多（同向，差生与优等生均衡）；班级总积分均衡为次要目标（在单科均衡前提下再平衡）。硬约束：人数差≤1、男女生绝对相等(构造保证)、单科A/纯B/A+B/学困人数极差≤1。差距很小无法调整时自然收敛、不强行破坏其它均衡。</p>
                 <hr style="border:none;border-top:1px dashed var(--border);margin:8px 0;">
                 <p><b>三、权重体系</b></p>
                 <p>• 班级人数：100（硬约束：人数差≤1）</p>
@@ -560,7 +617,7 @@
 <script>
 /* =============================================================================
  * fenban_core.js  —  智能分班·积分均衡版  核心算法
- *                    v3.6：总积分极差≤0.5验收重试 + A/B/A+B档极差≤1 + 互补微调 + 总分专项微调
+ *                    v3.7：单科极差最小化优先 + 班级总积分均衡次之 + 进度动画
  * -----------------------------------------------------------------------------
  * 用户要求：
  *   1) 男女生均衡                -> 【硬约束】默认权重最大，构造保证，永不被成绩优化牺牲
@@ -584,7 +641,7 @@
  *        科目总积分 = 人均积分 + A档积分 + B档积分
  *        班级总积分 = Σ(科目总积分)
  *
- * v3.6 优化流程（每次 attempt）：
+ * v3.7 优化流程（每次 attempt）：
  *   蛇形分层初分(按性别) -> 多重启模拟退火 -> 计数修复(极差>1定向修复)
  *   -> 最速下降精调 -> 计数修复 -> 软指标极差精修(硬约束单调)
  *   评级≠S 且有剩余尝试 -> 换种子整体重试（取评级最优者）
@@ -900,7 +957,7 @@
       if (d1 * d2 < 0) soft += 0.6 * (-d1 * d2);
     }
 
-    // ---- 各科均分均衡（用户最优先）+ 班级总积分均衡（严格按核算公式）----
+    // ---- 各科均分均衡（用户最优先：单科极差最小化，权重最高）+ 班级总积分均衡（其次）----
     var nI = CUR.integSubs.length;
     var tsArr = A[40], av = A[41], ar = A[42], br = A[43];
     for (c = 0; c < n; c++) tsArr[c] = 0;
@@ -918,10 +975,11 @@
       for (c = 0; c < n; c++) {
         tsArr[c] += params.ratioAvg * av[c] / ma + params.ratioA * ar[c] / mA + params.ratioB * br[c] / mB;
       }
-      soft += w.subj * (relVarOf(av, n) + relRangeOf(av, n));
+      // 单科均分：首要目标，权重最高（极差 + 方差都压到最小）
+      soft += w.subj * 2.5 * (relVarOf(av, n) + relRangeOf(av, n));
     }
-    // 总积分极差：主尺子（核算系统最终输出），权重最高、以极差为主
-    soft += w.total * (1.5 * relRangeOf(tsArr, n) + 0.6 * relVarOf(tsArr, n));
+    // 班级总积分：次要目标（在单科均衡的前提下再平衡总分），权重下调
+    soft += w.total * (0.6 * relRangeOf(tsArr, n) + 0.3 * relVarOf(tsArr, n));
 
     // ---- 同名打散 ----
     soft += w.samename * (namePen ? namePen.v : 0) * 5e-4;
@@ -1499,36 +1557,44 @@
     var agg = buildAgg(students, lines, cls, n, namePen);
     var hardGender = (params.genderMode === 'hard');
     var rounds = 0;
-    while (rounds < (maxRounds || 12)) {
+    var maxR = maxRounds || 30;
+    while (rounds < maxR) {
       rounds++;
       var ts = classTotalScores(agg, params);
-      var mx = -Infinity, mn = Infinity, hi = 0, lo = 0;
-      for (var c = 0; c < n; c++) {
-        if (ts[c] > mx) { mx = ts[c]; hi = c; }
-        if (ts[c] < mn) { mn = ts[c]; lo = c; }
-      }
+      // 找出总分最高/最低的两个班（极端班无可换学生时退而求其次）
+      var sortedIdx = ts.map(function(v, i) { return { v: v, i: i }; }).sort(function(a, b) { return b.v - a.v; });
+      var mx = sortedIdx[0].v, mn = sortedIdx[n - 1].v;
       var rng = mx - mn;
-      if (rng < 0.3) break;                       // 总分已经够均衡，停止（差距很小就不调整）
+      if (rng < 0.05) break;                       // 总分已经够均衡（贴近理论下限），停止
+      var hiList = [sortedIdx[0].i];
+      if (n >= 3 && sortedIdx[1].v - mn > 0.05) hiList.push(sortedIdx[1].i);
+      var loList = [sortedIdx[n - 1].i];
+      if (n >= 3 && mx - sortedIdx[n - 2].v > 0.05) loList.push(sortedIdx[n - 2].i);
       var pen0 = namePen.v, hp0 = hardCountPenOf(agg);
       var bestD = -1e-9, bi = -1, bj = -1;
-      for (var i = 0; i < M; i++) {
-        if (cls[i] !== hi) continue;
-        if (fixed && fixed[i] >= 0) continue;
-        for (var j = 0; j < M; j++) {
-          if (cls[j] !== lo) continue;
-          if (fixed && fixed[j] >= 0) continue;
-          if (hardGender && students[i].gender !== students[j].gender) continue;
-          applySwapNP(students, lines, agg, cls, namePen, i, j);
-          var ok = (namePen.v <= pen0) && (hardCountPenOf(agg) <= hp0);
-          var d = 0;
-          if (ok) {
-            var ts2 = classTotalScores(agg, params);
-            var mx2 = -Infinity, mn2 = Infinity;
-            for (var c2 = 0; c2 < n; c2++) { if (ts2[c2] > mx2) mx2 = ts2[c2]; if (ts2[c2] < mn2) mn2 = ts2[c2]; }
-            d = rng - (mx2 - mn2);
+      for (var hk = 0; hk < hiList.length; hk++) {
+        for (var lk = 0; lk < loList.length; lk++) {
+          var hiC = hiList[hk], loC = loList[lk];
+          for (var i = 0; i < M; i++) {
+            if (cls[i] !== hiC) continue;
+            if (fixed && fixed[i] >= 0) continue;
+            for (var j = 0; j < M; j++) {
+              if (cls[j] !== loC) continue;
+              if (fixed && fixed[j] >= 0) continue;
+              if (hardGender && students[i].gender !== students[j].gender) continue;
+              applySwapNP(students, lines, agg, cls, namePen, i, j);
+              var ok = (namePen.v <= pen0) && (hardCountPenOf(agg) <= hp0);
+              var d = 0;
+              if (ok) {
+                var ts2 = classTotalScores(agg, params);
+                var mx2 = -Infinity, mn2 = Infinity;
+                for (var c2 = 0; c2 < n; c2++) { if (ts2[c2] > mx2) mx2 = ts2[c2]; if (ts2[c2] < mn2) mn2 = ts2[c2]; }
+                d = rng - (mx2 - mn2);
+              }
+              if (d > bestD) { bestD = d; bi = i; bj = j; }
+              applySwapNP(students, lines, agg, cls, namePen, i, j);
+            }
           }
-          if (d > bestD) { bestD = d; bi = i; bj = j; }
-          applySwapNP(students, lines, agg, cls, namePen, i, j);
         }
       }
       if (bi < 0 || bestD < 1e-9) break;
@@ -1537,7 +1603,7 @@
     return cls;
   }
 
-  function optimize(inputStudents, paramsIn) {
+  async function optimize(inputStudents, paramsIn, onProgress) {
     var params = Object.assign({}, DEFAULT_PARAMS, paramsIn || {});
     params.weights = Object.assign({ subj: 100, a: 100, b: 100, ab: 100, poor: 100, total: 100,
                                      samename: 100, cadre: 100, special: 100 }, params.weights || {});
@@ -1621,6 +1687,14 @@
     var attempts = params.attempts || 8;
     var baseSeed = (params.seed != null && params.seed > 0) ? params.seed : 1;
     var bestOverall = null;
+    // 进度上报：总单元数 = attempts × (restarts + 9 个精修步骤)，每完成一个单元上报一次
+    var doneUnits = 0, totalUnits = attempts * (restarts + 9);
+    var _yield = function(phase, label) {
+      doneUnits++;
+      var pct = Math.min(99, Math.round(doneUnits / totalUnits * 100));
+      if (onProgress) onProgress(phase, pct, label || phase);
+      return new Promise(function(res) { setTimeout(res, 0); });
+    };
     for (var a = 0; a < attempts; a++) {
       var best = null;
       for (var r = 0; r < restarts; r++) {
@@ -1629,23 +1703,37 @@
         var init = genderBalancedInit(students, n, fixed, cap, r === 0 ? null : rrng);
         var res = anneal(students, params, lines, init, rrng, fixed);
         if (!best || res.obj < best.obj) best = res;
+        await _yield('模拟退火优化', '第 ' + (a + 1) + ' 轮尝试 · 重启 ' + (r + 1) + '/' + restarts + '（退火寻优中）');
       }
       // 完整精修链（每个候选都做，确保总积分被压到极限）
       best.cls = countRepair(students, params, lines, best.cls, fixed, 60);
+      await _yield('计数修复', 'A/B 档人数极差修复至 ≤1');
       best.cls = steepestDescent(students, params, lines, best.cls, params.steepestBudgetMs, fixed);
+      await _yield('最陡下降', '单科均分 / 总分离散度下降');
       best.cls = countRepair(students, params, lines, best.cls, fixed, 60);
+      await _yield('计数修复', 'A/B 档人数极差复核');
       best.cls = rangePolish(students, params, lines, best.cls, fixed, params.rangeBudgetMs);
+      await _yield('极差精修', '压缩 A / B / 学困 极差');
       best.cls = complementaryPolish(students, params, lines, best.cls, fixed, 20);
-      best.cls = totalScorePolish(students, params, lines, best.cls, fixed, 12);
+      await _yield('互补微调', 'A+B ↔ 人均分 / A ↔ B 动态平衡');
+      best.cls = totalScorePolish(students, params, lines, best.cls, fixed, 25);
+      await _yield('总分专项', '总分最高班 ↔ 最低班交换，压总积分极差');
+      best.cls = countRepair(students, params, lines, best.cls, fixed, 60);
+      await _yield('计数修复', '总积分精修后计数复核');
+      best.cls = totalScorePolish(students, params, lines, best.cls, fixed, 15);
+      await _yield('总分二次专项', '二次压缩总积分极差');
       best.cls = countRepair(students, params, lines, best.cls, fixed, 200);
+      await _yield('计数兜底', '最终计数兜底修复');
       var met = computeMetrics(students, best.cls, params, lines);
       var audit = met.summary.uiAudit;
       var totalRange = met.summary.totalScore.range;
-      // 多结果选最优：先计数违反（≤1），再看总积分极差（越小越好）
+      var maxSubVar = audit.maxSubVar || 0;
+      // 多结果选最优：先计数违反（≤1）→ 再看总积分极差（越小越好）→ 再看人均分方差（越小越好）
       if (!bestOverall ||
           (audit.violations < bestOverall.viol) ||
-          (audit.violations === bestOverall.viol && totalRange < bestOverall.totalRange - 1e-6)) {
-        bestOverall = { cls: best.cls, metrics: met, viol: audit.violations, totalRange: totalRange };
+          (audit.violations === bestOverall.viol && totalRange < bestOverall.totalRange - 1e-6) ||
+          (audit.violations === bestOverall.viol && Math.abs(totalRange - bestOverall.totalRange) <= 1e-6 && maxSubVar < bestOverall.maxSubVar - 1e-9)) {
+        bestOverall = { cls: best.cls, metrics: met, viol: audit.violations, totalRange: totalRange, maxSubVar: maxSubVar };
       }
       // 达标：总积分极差 ≤ 0.5 且 零计数违反 → 提前结束（用户验收标准）
       if (totalRange <= 0.5 && audit.violations === 0) break;
@@ -1882,9 +1970,38 @@ document.getElementById('helpPopup').addEventListener('click', function(e) { e.s
 function variance(arr) { if (arr.length <= 1) return 0; var m = arr.reduce(function(a, b) { return a + b; }, 0) / arr.length; return arr.reduce(function(s, v) { return s + (v - m) * (v - m); }, 0) / arr.length; }
 function avg(arr, key) { if (!arr || !arr.length) return 0; return arr.reduce(function(t, i) { return t + (i[key] || 0); }, 0) / arr.length; }
 function showToast(msg, type, dur) { type = type || 'success'; dur = dur || 3000; var toast = document.getElementById('toast'); toast.className = 'toast toast-' + type; var closeBtn = '<button onclick="document.getElementById(\'toast\').classList.remove(\'show\')" style="cursor:pointer;margin-left:8px;opacity:0.6;font-size:16px;background:none;border:none;color:inherit;padding:4px 6px;border-radius:4px;transition:all 0.2s;flex-shrink:0;" onmouseover="this.style.opacity=1;this.style.background=\'rgba(0,0,0,0.08)\'" onmouseout="this.style.opacity=0.6;this.style.background=\'none\'">✕</button>'; var redivideBtn = msg.indexOf('分班完成') >= 0 ? '<button onclick="document.getElementById(\'toast\').classList.remove(\'show\');startDivide()" style="cursor:pointer;margin-left:8px;padding:4px 12px;background:#0d9488;color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;transition:all 0.2s;flex-shrink:0;" onmouseover="this.style.background=\'#0f766e\'" onmouseout="this.style.background=\'#0d9488\'">🔄 重新分班</button>' : ''; toast.innerHTML = '<i class="fas fa-' + (type === 'success' ? 'check-circle' : type === 'error' ? 'times-circle' : 'info-circle') + '" style="font-size:18px;flex-shrink:0;"></i><span style="flex:1;line-height:1.5;">' + msg + '</span>' + redivideBtn + closeBtn; toast.classList.add('show'); if (toast._timer) clearTimeout(toast._timer); toast._timer = setTimeout(function() { toast.classList.remove('show'); }, dur); }
+/* 下一步操作引导：根据当前进度，对“当前可操作项”做大小缩放动画提示 */
+function applyGuide(sels) {
+    var next = [];
+    sels.forEach(function(s) { var el = document.querySelector(s); if (el) next.push(el); });
+    document.querySelectorAll('.guide-next').forEach(function(el) {
+        if (next.indexOf(el) === -1) el.classList.remove('guide-next');
+    });
+    next.forEach(function(el) { el.classList.add('guide-next'); });
+}
+/* 引导动画：按菜单“互斥”模式 —— 同一时刻仅高亮当前菜单及其主操作按钮，其余全部停止。
+   默认（软件启动、未点击任何菜单前）四个菜单按钮全部闪烁，提示均可操作。 */
+var TAB_GUIDE = {
+    student: ['[data-tab="student"]', '#btnDownloadTemplate', '#btnUploadXlsx'],
+    setting: ['[data-tab="setting"]', 'button[onclick="startDivide()"]'],
+    result:  ['[data-tab="result"]', '#result button[onclick="exportResult()"]', '#result button[onclick="exportStatsReport()"]', '#result button[onclick="copyResult()"]'],
+    chart:   ['[data-tab="chart"]', '#chart button[onclick="exportResult()"]', '#chart button[onclick="exportStatsReport()"]']
+};
+function applyTabGuide(tabId) {
+    var sels = TAB_GUIDE[tabId] || TAB_GUIDE.student;
+    applyGuide(sels);
+}
 function saveData() { localStorage.setItem('fusion_students', JSON.stringify(students)); localStorage.setItem('fusion_classes', JSON.stringify(classes)); localStorage.setItem('fusion_version', DATA_VERSION); }
-function loadData() { var ver = localStorage.getItem('fusion_version'); if (ver !== DATA_VERSION) { localStorage.removeItem('fusion_students'); localStorage.removeItem('fusion_classes'); localStorage.setItem('fusion_version', DATA_VERSION); return; } var s = localStorage.getItem('fusion_students'); if (s) { try { students = JSON.parse(s); } catch(e) { students = []; } } var c = localStorage.getItem('fusion_classes'); if (c) { try { classes = JSON.parse(c); } catch(e) { classes = []; } } }
-function switchTab(tabId, btn) { document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); }); document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); }); document.getElementById(tabId).classList.add('active'); btn.classList.add('active'); if (tabId === 'result') renderClassResult(); if (tabId === 'chart') { calculateVariance(); renderStatsTable(); renderMultiChart(); renderBalanceScore('chartBalanceScore'); } }
+function loadData() {
+  // 软件首次运行时默认清除内部缓存数据
+  if (localStorage.getItem('fusion_firstrun') === null) {
+    localStorage.removeItem('fusion_students');
+    localStorage.removeItem('fusion_classes');
+    localStorage.setItem('fusion_firstrun', '1');
+  }
+  var ver = localStorage.getItem('fusion_version'); if (ver !== DATA_VERSION) { localStorage.removeItem('fusion_students'); localStorage.removeItem('fusion_classes'); localStorage.setItem('fusion_version', DATA_VERSION); return; } var s = localStorage.getItem('fusion_students'); if (s) { try { students = JSON.parse(s); } catch(e) { students = []; } } var c = localStorage.getItem('fusion_classes'); if (c) { try { classes = JSON.parse(c); } catch(e) { classes = []; } } }
+function switchTab(tabId, btn) { document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); }); document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); }); document.getElementById(tabId).classList.add('active'); btn.classList.add('active'); if (tabId === 'result') renderClassResult(); if (tabId === 'chart') { calculateVariance(); renderStatsTable(); renderMultiChart(); renderBalanceScore('chartBalanceScore'); } var tb = document.querySelector('.data-toolbar'); if (tb) tb.style.display = (tabId === 'student' || tabId === 'setting') ? '' : 'none'; if (typeof applyTabGuide === 'function') applyTabGuide(tabId); }
+function activateTab(id) { var b = document.querySelector('.tab-btn[data-tab="' + id + '"]'); if (b) switchTab(id, b); }
 function changeClassCount(delta) { var inp = document.getElementById('classNum'); var v = parseInt(inp.value) + delta; v = Math.max(2, Math.min(20, v)); inp.value = v; }
 function syncClassNum() { var inp = document.getElementById('classNum'); var v = parseInt(inp.value); if (isNaN(v) || v < 2) v = 2; if (v > 20) v = 20; inp.value = v; }
 function updateWeightDisplay(el) { var valSpan = document.getElementById(el.id + '_val'); if (valSpan) valSpan.textContent = el.value; }
@@ -1978,8 +2095,8 @@ function saveEditStudent() {
 }
 
 function deleteStudent(uid) { var nuid = Number(uid); var idx = students.findIndex(function(s) { return s._uid === nuid; }); if (idx === -1) return; if (confirm('确定删除？')) { students.splice(idx, 1); saveData(); renderStudentTable(); showToast('已删除'); } }
-function generateDemoData() { demoCache = []; createDemoData(100, demoCache); showToast('缓存已生成，点击一键填充'); }
-function fillFullDemo() { if (!demoCache.length) { showToast('请先生成缓存', 'error'); return; } students = JSON.parse(JSON.stringify(demoCache)); saveData(); renderStudentTable(); showToast('已填充100条'); }
+function generateDemoData() { demoCache = []; createDemoData(200, demoCache); showToast('缓存已生成，点击一键填充'); }
+function fillFullDemo() { if (!demoCache.length) { showToast('请先生成缓存', 'error'); return; } students = JSON.parse(JSON.stringify(demoCache)); saveData(); renderStudentTable(); showToast('已填充200条'); }
 
 function createDemoData(count, arr) {
     var surnames = '张王李赵刘陈杨黄吴周徐孙马朱胡林郭何高罗郑梁谢宋唐许韩冯邓曹彭曾肖田董潘袁于蒋蔡余杜叶程苏魏吕丁任沈姚卢姜崔钟谭陆汪范廖石金贾夏韦付方邹熊白孟秦邱江尹薛闫雷侯龙史陶黎贺顾毛郝龚邵万钱严覃武戴莫孔向汤';
@@ -2031,6 +2148,8 @@ function importFile(e) {
 }
 
 function processCSVRows(rows) {
+    // 每次上传导入默认覆盖软件内已有数据
+    students = []; classes = [];
     var imported = 0, skipped = 0;
     for (var i = 1; i < rows.length; i++) {
         var r = rows[i];
@@ -2050,7 +2169,8 @@ function processCSVRows(rows) {
         });
         imported++;
     }
-    saveData(); renderStudentTable(); showToast('导入成功 ' + imported + ' 人，跳过 ' + skipped + ' 人');
+    saveData(); renderStudentTable(); activateTab('setting'); // 上传数据后自动切换到“分班策略”菜单
+    showToast('已覆盖导入 ' + imported + ' 人，跳过 ' + skipped + ' 人');
 }
 
 function clearData() { if (confirm('清空所有数据？')) { students = []; classes = []; demoCache = []; saveData(); renderStudentTable(); document.getElementById('classResult').innerHTML = ''; showToast('已清空'); } }
@@ -2241,6 +2361,23 @@ function computeMetrics(c) {
 
 function constraintBadScore(m) {
     return Math.max(0, m.maxSubABRange - 1) * 500 + Math.max(0, m.maxSubARange - 1) * 300 + Math.max(0, m.maxSubBRange - 1) * 300 + Math.max(0, m.abRange) * 200 + Math.max(0, m.maxSubVar - 1) * 100 + Math.max(0, m.poorRange - 1) * 80 + Math.max(0, m.sizeDiff - 1) * 80;
+}
+
+var lastTotalScoreRange = 0;
+function countViolationsOf(m) {
+    var v = 0;
+    if (m.sizeDiff > 1) v++;
+    if (m.abRange > 1) v++;
+    if (m.maxSubARange > 1) v++;
+    if (m.maxSubBRange > 1) v++;
+    if (m.maxSubABRange > 1) v++;
+    if (m.poorRange > 1) v++;
+    return v;
+}
+// 连续均衡评分：随「总积分极差 / 人均分方差 / 计数违反」连续变化（不再固定 95）
+function balanceScoreOf(totalRange, maxSubVar, viol) {
+    var s = 100 - (totalRange || 0) * 2.5 - (maxSubVar || 0) * 6 - (viol || 0) * 12;
+    return Math.max(0, Math.min(100, Math.round(s * 10) / 10));
 }
 
 function checkSLevel(m, cls, classCount) {
@@ -2610,7 +2747,7 @@ function startDivide() {
   document.getElementById('loadingSubtext').innerHTML = '正在按「性别绝对均衡(硬约束) + 单科成绩最优先 + A/B/学困人数极差≤1 + AB-学困同向互补」优化，评级未达S级自动换种子重试（不再靠运气）...';
 
   // 让浏览器先绘制 loading，再执行（可能耗时数秒到十几秒）的优化，避免界面无反馈
-  setTimeout(function () {
+  setTimeout(async function () {
     try {
       // —— 核心：v3 评级驱动优化器（目标函数内置 UI 评级全部考核指标）——
       var input = students.map(function(s) {
@@ -2646,14 +2783,19 @@ function startDivide() {
       window.__fenbanRunCount = (window.__fenbanRunCount || 0) + 1;
       var runSeed = window.__fenbanRunCount;
       var params = {
-        nClasses: classCount, iterations: 40000, restarts: 5, attempts: 3, seed: runSeed,
+        nClasses: classCount, iterations: 40000, restarts: 5, attempts: 5, seed: runSeed,
         ratioAvg: 50, ratioA: 20, ratioB: 30, percentA: 25, percentB: 60, fixed: fixed,
         weights: { subj: wSubj, a: wA, b: wB, ab: Math.round((wA + wB) / 2),
                    poor: wPoor, total: wTotal, samename: wSame, cadre: wCadre, special: wSpecial },
         genderMode: (wGender >= 100 ? 'hard' : 'soft'),  // 性别权重=100(最大) -> 硬约束，保证绝对均衡
         genderWeight: wGender
       };
-      var res = FenbanCore.optimize(input, params);
+      var res = await FenbanCore.optimize(input, params, function(phase, pct, label) {
+        document.getElementById('progressBar').style.width = pct + '%';
+        document.getElementById('progressText').textContent = '已完成 ' + pct + '%';
+        setLoadingPhase(phase);
+        document.getElementById('loadingSubtext').innerHTML = label || phase;
+      });
       var assign = res.cls; // 与 students 同序的班级下标
 
       // —— 锁定学生（指定班级）强制落位（安全兜底，正常已在优化器内落位）——
@@ -2697,8 +2839,10 @@ function startDivide() {
       var sizeDiff = Math.max.apply(null, sizes) - Math.min.apply(null, sizes);
       var totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
       var gradeChar = grade.charAt(0);
-      var gscore = gradeChar === 'S' ? 95 : gradeChar === 'A' ? 80 : gradeChar === 'B' ? 65 : 45;
-      var advice = gradeChar === 'S' ? '所有均衡指标均达标，分班质量极高！' : gradeChar === 'A' ? '基本达标，成绩均衡度良好。' : gradeChar === 'B' ? '均衡度尚可，建议稍作手动调整。' : '均衡度不足，可增加学生数或调整班级数。';
+      var totalRange = (res.metrics && res.metrics.summary && res.metrics.summary.totalScore) ? res.metrics.summary.totalScore.range : 0;
+      lastTotalScoreRange = totalRange;
+      var gscore = balanceScoreOf(totalRange, metrics.maxSubVar, countViolationsOf(metrics));
+      var advice = gradeChar === 'S' ? '所有均衡指标均达标；总积分极差 ' + totalRange.toFixed(2) + '（越小越优）' : gradeChar === 'A' ? '基本达标；总积分极差 ' + totalRange.toFixed(2) : gradeChar === 'B' ? '均衡度尚可，建议稍作手动调整。' : '均衡度不足，可增加学生数或调整班级数。';
       var gradeColor = gradeChar === 'S' ? '#059669' : gradeChar === 'A' ? '#2563eb' : gradeChar === 'B' ? '#d97706' : '#dc2626';
       var gradeText = gradeChar + ' (' + (gradeChar === 'S' ? '卓越' : gradeChar === 'A' ? '优秀' : gradeChar === 'B' ? '良好' : '需优化') + ')';
 
@@ -2719,6 +2863,7 @@ function startDivide() {
       resultDiv.prepend(box);
       renderClassResult();
       renderBalanceScore('balanceScoreArea');
+      activateTab('result'); // 分班完成后自动推进到“分班结果”菜单
 
       showResultModal(gradeText, gscore, sizeDiff, totalTime, 0, gradeColor, advice);
     } catch (e) {
@@ -2729,13 +2874,13 @@ function startDivide() {
   }, 30);
 }
 
-function renderBalanceScore(containerId) { var container = document.getElementById(containerId); if (!container || !classes.length) { if (container) container.innerHTML = ''; return; } var score = 100; var totalVar = variance(classes.map(function(c) { return avg(c.students, 'total'); })); if (totalVar > 0.5) score -= 10; if (totalVar > 1.0) score -= 15; if (totalVar > 2.0) score -= 20; ['chinese','math','english','morality','science'].forEach(function(k) { var v = variance(classes.map(function(c) { return avg(c.students, k); })); if (v > 0.5) score -= 5; if (v > 1.0) score -= 8; }); var aVar = variance(classes.map(function(c) { return c.students.filter(function(s) { return s.isA; }).length; })); var bVar = variance(classes.map(function(c) { return c.students.filter(function(s) { return s.isB; }).length; })); if (aVar > 0.3) score -= 10; if (bVar > 0.3) score -= 10; var sizes = classes.map(function(c) { return c.students.length; }); var sizeDiff = Math.max.apply(null, sizes) - Math.min.apply(null, sizes); if (sizeDiff > 1) score -= 30; else if (sizeDiff > 0) score -= 5; score = Math.max(0, Math.min(100, score)); var level = score >= 90 ? 'S' : score >= 75 ? 'A' : score >= 60 ? 'B' : 'C'; var levelText = level === 'S' ? '卓越' : level === 'A' ? '优秀' : level === 'B' ? '良好' : '需优化'; var gradeColor = level === 'S' ? '#059669' : level === 'A' ? '#2563eb' : level === 'B' ? '#d97706' : '#dc2626'; var gradeCards = '<div style="display:flex;align-items:center;gap:6px;padding:5px 12px;background:white;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.08);border:1px solid #e2e8f0;"><div style="width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:white;background:' + gradeColor + ';">' + level + '</div><div style="font-size:12px;color:#475569;">评级 <strong style="color:' + gradeColor + ';">' + levelText + '</strong></div></div><div style="display:flex;align-items:center;gap:6px;padding:5px 12px;background:white;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.08);border:1px solid #e2e8f0;"><div style="font-size:18px;font-weight:800;color:' + gradeColor + ';">' + score + '</div><div style="font-size:12px;color:#475569;">均衡评分</div></div><div style="display:flex;align-items:center;gap:6px;padding:5px 12px;background:white;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.08);border:1px solid #e2e8f0;"><div style="font-size:18px;font-weight:800;color:' + (sizeDiff <= 1 ? '#059669' : '#dc2626') + ';">' + sizeDiff + '</div><div style="font-size:12px;color:#475569;">人数差</div></div>'; container.innerHTML = gradeCards; var chartGrade = document.getElementById('chartGradeArea'); if (chartGrade) { chartGrade.innerHTML = '<div style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:white;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,0.08);border:1px solid #e2e8f0;"><div style="width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:white;background:' + gradeColor + ';">' + level + '</div><div style="font-size:13px;color:#475569;">分班评级：<strong style="color:' + gradeColor + ';">' + levelText + '</strong></div></div><div style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:white;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,0.08);border:1px solid #e2e8f0;"><div style="font-size:22px;font-weight:800;color:' + gradeColor + ';">' + score + '</div><div style="font-size:13px;color:#475569;">均衡评分</div></div><div style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:white;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,0.08);border:1px solid #e2e8f0;"><div style="font-size:22px;font-weight:800;color:' + (sizeDiff <= 1 ? '#059669' : '#dc2626') + ';">' + sizeDiff + '</div><div style="font-size:13px;color:#475569;">人数差</div></div>'; } }
+function renderBalanceScore(containerId) { var container = document.getElementById(containerId); if (!container || !classes.length) { if (container) container.innerHTML = ''; return; } detectActiveSubjects(); var metrics = computeMetrics(classes); var level = computeGrade(metrics, classes, classes.length); var levelText = level === 'S' ? '卓越' : level === 'A' ? '优秀' : level === 'B' ? '良好' : '需优化'; var gradeColor = level === 'S' ? '#059669' : level === 'A' ? '#2563eb' : level === 'B' ? '#d97706' : '#dc2626'; var score = balanceScoreOf(lastTotalScoreRange, metrics.maxSubVar, countViolationsOf(metrics)); var sizes = classes.map(function(c) { return c.students.length; }); var sizeDiff = Math.max.apply(null, sizes) - Math.min.apply(null, sizes); var gradeCards = '<div style="display:flex;align-items:center;gap:6px;padding:5px 12px;background:white;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.08);border:1px solid #e2e8f0;"><div style="width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:white;background:' + gradeColor + ';">' + level + '</div><div style="font-size:12px;color:#475569;">评级 <strong style="color:' + gradeColor + ';">' + levelText + '</strong></div></div><div style="display:flex;align-items:center;gap:6px;padding:5px 12px;background:white;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.08);border:1px solid #e2e8f0;"><div style="font-size:18px;font-weight:800;color:' + gradeColor + ';">' + score + '</div><div style="font-size:12px;color:#475569;">均衡评分</div></div><div style="display:flex;align-items:center;gap:6px;padding:5px 12px;background:white;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.08);border:1px solid #e2e8f0;"><div style="font-size:18px;font-weight:800;color:' + (sizeDiff <= 1 ? '#059669' : '#dc2626') + ';">' + sizeDiff + '</div><div style="font-size:12px;color:#475569;">人数差</div></div>'; container.innerHTML = gradeCards; var chartGrade = document.getElementById('chartGradeArea'); if (chartGrade) { chartGrade.innerHTML = '<div style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:white;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,0.08);border:1px solid #e2e8f0;"><div style="width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:white;background:' + gradeColor + ';">' + level + '</div><div style="font-size:13px;color:#475569;">分班评级：<strong style="color:' + gradeColor + ';">' + levelText + '</strong></div></div><div style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:white;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,0.08);border:1px solid #e2e8f0;"><div style="font-size:22px;font-weight:800;color:' + gradeColor + ';">' + score + '</div><div style="font-size:13px;color:#475569;">均衡评分</div></div><div style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:white;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,0.08);border:1px solid #e2e8f0;"><div style="font-size:22px;font-weight:800;color:' + (sizeDiff <= 1 ? '#059669' : '#dc2626') + ';">' + sizeDiff + '</div><div style="font-size:13px;color:#475569;">人数差</div></div>'; } }
 
 function showLoading() { document.getElementById('loadingModal').style.display = 'flex'; }
 function hideLoading() { document.getElementById('loadingModal').style.display = 'none'; }
 function getGradeStyle(g) { if (g==='S') return 'background:linear-gradient(145deg,#ffd700,#ffaa00,#ffd700,#fff8dc,#ffd700);color:#7c2d12;text-shadow:0 1px 2px rgba(255,255,255,0.6);box-shadow:0 0 20px rgba(255,215,0,0.6),0 0 40px rgba(255,170,0,0.3),inset 0 2px 4px rgba(255,255,255,0.5),inset 0 -2px 4px rgba(0,0,0,0.2);border:3px solid #b8860b;'; if (g==='A') return 'background:linear-gradient(145deg,#60a5fa,#3b82f6,#60a5fa);color:white;text-shadow:0 1px 3px rgba(0,0,0,0.3);box-shadow:0 6px 20px rgba(59,130,246,0.4),inset 0 2px 4px rgba(255,255,255,0.3),inset 0 -2px 4px rgba(0,0,0,0.2);border:2px solid #2563eb;'; if (g==='B') return 'background:linear-gradient(145deg,#fbbf24,#f59e0b,#fbbf24);color:#7c2d12;text-shadow:0 1px 2px rgba(255,255,255,0.4);box-shadow:0 6px 20px rgba(245,158,11,0.4),inset 0 2px 4px rgba(255,255,255,0.3),inset 0 -2px 4px rgba(0,0,0,0.2);border:2px solid #d97706;'; return 'background:linear-gradient(145deg,#f87171,#ef4444,#f87171);color:white;text-shadow:0 1px 3px rgba(0,0,0,0.3);box-shadow:0 6px 20px rgba(239,68,68,0.4),inset 0 2px 4px rgba(255,255,255,0.3),inset 0 -2px 4px rgba(0,0,0,0.2);border:2px solid #dc2626;'; }
 function showResultModal(grade, score, sizeDiff, totalTime, iter, gradeColor, advice) { var modal = document.getElementById('resultModal'); var content = document.getElementById('resultModalContent'); var gs = getGradeStyle(grade.charAt(0)); content.innerHTML = '<button onclick="document.getElementById(\'resultModal\').style.display=\'none\'" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:24px;color:#94a3b8;cursor:pointer;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.color=\'#dc2626\';this.style.background=\'#fef2f2\'" onmouseout="this.style.color=\'#94a3b8\';this.style.background=\'none\'">✕</button>' + '<div style="width:88px;height:88px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:44px;font-weight:900;margin:0 auto 16px;' + gs + '">' + grade.charAt(0) + '</div>' + '<div style="font-size:20px;font-weight:700;color:#1e293b;margin-bottom:4px;">🎉 分班完成！</div>' + '<div style="font-size:16px;color:' + gradeColor + ';font-weight:700;margin-bottom:16px;">' + grade + '</div>' + '<div style="display:flex;justify-content:center;gap:16px;margin-bottom:16px;">' + '<div style="text-align:center;padding:12px 24px;background:linear-gradient(135deg,#f0fdfa,#ccfbf1);border-radius:12px;min-width:90px;border:1px solid #99f6e4;"><div style="font-size:32px;font-weight:900;color:#0d9488;">' + score + '</div><div style="font-size:13px;color:#64748b;font-weight:600;">均衡评分</div></div>' + '<div style="text-align:center;padding:12px 24px;background:' + (sizeDiff <= 1 ? 'linear-gradient(135deg,#f0fdfa,#ccfbf1)' : 'linear-gradient(135deg,#fef2f2,#fecaca)') + ';border-radius:12px;min-width:90px;border:1px solid ' + (sizeDiff <= 1 ? '#99f6e4' : '#fca5a5') + ';"><div style="font-size:32px;font-weight:900;color:' + (sizeDiff <= 1 ? '#0d9488' : '#dc2626') + ';">' + sizeDiff + '</div><div style="font-size:13px;color:#64748b;font-weight:600;">人数差</div></div>' + '</div>' + '<div style="font-size:13px;color:#64748b;margin-bottom:16px;line-height:1.6;">' + advice + '</div>' + '<div style="font-size:12px;color:#94a3b8;margin-bottom:20px;">⏱ 用时 ' + totalTime + 's | 🔄 迭代 ' + iter + ' 次</div>' + '<div style="display:flex;gap:12px;justify-content:center;">' + '<button onclick="document.getElementById(\'resultModal\').style.display=\'none\';startDivide()" style="padding:12px 28px;background:linear-gradient(135deg,#0d9488,#0ea5e9);color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 12px rgba(13,148,136,0.3);" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 6px 16px rgba(13,148,136,0.4)\'" onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'0 4px 12px rgba(13,148,136,0.3)\'">🔄 重新分班</button>' + '<button onclick="document.getElementById(\'resultModal\').style.display=\'none\'" style="padding:12px 28px;background:linear-gradient(135deg,#f1f5f9,#e2e8f0);color:#475569;border:1px solid #cbd5e1;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.transform=\'none\'">👁 查看结果</button>' + '</div>'; modal.style.display = 'flex'; if (modal._timer) clearTimeout(modal._timer); modal._timer = setTimeout(function() { modal.style.display = 'none'; }, 8000); }
-function updateProgress(pct, totalVar, maxSubVar, temp) { document.getElementById('progressBar').style.width = pct + '%'; document.getElementById('progressText').textContent = '已完成 ' + Math.round(pct) + '%，温度 ' + temp.toFixed(2); document.getElementById('loadingSubtext').innerHTML = '当前最优: 总分方差 ' + totalVar.toFixed(4) + ' | 单科最大方差 ' + maxSubVar.toFixed(4); }
+function updateProgress(pct, totalVar, maxSubVar, temp) { document.getElementById('progressBar').style.width = pct + '%'; document.getElementById('progressText').textContent = '已完成 ' + Math.round(pct) + '%'; if (totalVar || maxSubVar) { document.getElementById('loadingSubtext').innerHTML = '当前最优: 总分方差 ' + totalVar.toFixed(4) + ' | 单科最大方差 ' + maxSubVar.toFixed(4); } }
 function setLoadingPhase(phase) { var el = document.getElementById('loadingPhase'); if (el) el.textContent = '阶段：' + phase; }
 function setLoadingMetrics(html) { var el = document.getElementById('loadingMetrics'); if (el) el.innerHTML = html; }
 
@@ -2817,14 +2962,14 @@ function renderStatsTable() {
 
 function renderMultiChart() { var canvas = document.getElementById('balanceChart'); var ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, canvas.width, canvas.height); if (!classes.length) return; var subjects = ['语文', '数学', '英语', '道法', '科学']; var subjectKeys = ['chinese', 'math', 'english', 'morality', 'science']; var colors = ['#0d9488', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6']; var barW = Math.max(8, Math.min(25, 600 / (classes.length * 6))); var groupW = barW * 5 + 8; var gap = Math.max(10, Math.min(30, (canvas.width - 80) / classes.length - groupW)); var startX = 70, startY = 300; ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 0.5; for (var g = 0; g <= 5; g++) { var y = startY - (g * 50 * 1.5); ctx.beginPath(); ctx.moveTo(startX - 5, y); ctx.lineTo(canvas.width, y); ctx.stroke(); ctx.fillStyle = '#999'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right'; ctx.fillText(String(g * 20), startX - 8, y + 4); } classes.forEach(function(c, i) { var x = startX + i * (groupW + gap); subjectKeys.forEach(function(k, j) { var val = avg(c.students, k); ctx.fillStyle = colors[j]; ctx.fillRect(x + j * (barW + 2), startY - val * 1.5, barW, val * 1.5); }); ctx.fillStyle = '#333'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(c.name, x + groupW / 2, startY + 20); }); var legendY = 15; subjects.forEach(function(s, j) { ctx.fillStyle = colors[j]; ctx.fillRect(startX + j * 80, legendY, 12, 12); ctx.fillStyle = '#333'; ctx.font = '11px sans-serif'; ctx.textAlign = 'left'; ctx.fillText(s, startX + j * 80 + 16, legendY + 10); }); }
 
-function exportResult() { if (!classes.length) { showToast('无数据', 'error'); return; } var wb = XLSX.utils.book_new(); var subjects = ['chinese','math','english','morality','science']; var subjectNames = {chinese:'语文',math:'数学',english:'英语',morality:'道法',science:'科学'}; var allData = [['姓名','性别','身份证','原班级','新班级','语文','数学','英语','道法','科学','总分','等级','锁定']]; classes.forEach(function(cls) { cls.students.forEach(function(s) { var levels = subjects.map(function(subj) { var lvl = s[subj+'Level']; if (lvl === 'A') return subjectNames[subj]+'A'; if (lvl === 'B') return subjectNames[subj]+'B'; if (lvl === 'poor') return subjectNames[subj]+'困'; return ''; }).filter(function(b){return b;}).join(' '); allData.push([s.name, s.gender, s.idcard||'', s.oldClass||'', cls.name, s.chinese, s.math, s.english, s.morality, s.science, s.total, levels, s.locked?'是':'否']); }); }); var summaryWs = XLSX.utils.aoa_to_sheet(allData); summaryWs['!cols'] = [{wch:8},{wch:4},{wch:20},{wch:8},{wch:10},{wch:6},{wch:6},{wch:6},{wch:6},{wch:6},{wch:6},{wch:20},{wch:6}]; XLSX.utils.book_append_sheet(wb, summaryWs, '总表'); classes.forEach(function(cls) { var data = [['姓名','性别','身份证','原班级','新班级','语文','数学','英语','道法','科学','总分','等级','锁定']]; cls.students.forEach(function(s) { var levels = subjects.map(function(subj) { var lvl = s[subj+'Level']; if (lvl === 'A') return subjectNames[subj]+'A'; if (lvl === 'B') return subjectNames[subj]+'B'; if (lvl === 'poor') return subjectNames[subj]+'困'; return ''; }).filter(function(b){return b;}).join(' '); data.push([s.name, s.gender, s.idcard||'', s.oldClass||'', cls.name, s.chinese, s.math, s.english, s.morality, s.science, s.total, levels, s.locked?'是':'否']); }); var ws = XLSX.utils.aoa_to_sheet(data); ws['!cols'] = [{wch:8},{wch:4},{wch:20},{wch:8},{wch:10},{wch:6},{wch:6},{wch:6},{wch:6},{wch:6},{wch:6},{wch:20},{wch:6}]; XLSX.utils.book_append_sheet(wb, ws, cls.name); }); XLSX.writeFile(wb, '分班结果.xlsx'); }
+function exportResult() { if (!classes.length) { showToast('无数据', 'error'); return; } var wb = XLSX.utils.book_new(); var subjects = ['chinese','math','english','morality','science']; var subjectNames = {chinese:'语文',math:'数学',english:'英语',morality:'道法',science:'科学'}; var allData = [['姓名','性别','身份证','原班级','新班级','语文','数学','英语','道法','科学','总分','等级','锁定']]; classes.forEach(function(cls) { cls.students.forEach(function(s) { var levels = subjects.map(function(subj) { var lvl = s[subj+'Level']; if (lvl === 'A') return subjectNames[subj]+'A'; if (lvl === 'B') return subjectNames[subj]+'B'; if (lvl === 'poor') return subjectNames[subj]+'困'; return ''; }).filter(function(b){return b;}).join(' '); allData.push([s.name, s.gender, s.idcard||'', s.oldClass||'', cls.name, s.chinese, s.math, s.english, s.morality, s.science, s.total, levels, s.locked?'是':'否']); }); }); var summaryWs = XLSX.utils.aoa_to_sheet(allData); summaryWs['!cols'] = [{wch:8},{wch:4},{wch:20},{wch:8},{wch:10},{wch:6},{wch:6},{wch:6},{wch:6},{wch:6},{wch:6},{wch:20},{wch:6}]; XLSX.utils.book_append_sheet(wb, summaryWs, '总表'); classes.forEach(function(cls) { var data = [['姓名','性别','身份证','原班级','新班级','语文','数学','英语','道法','科学','总分','等级','锁定']]; cls.students.forEach(function(s) { var levels = subjects.map(function(subj) { var lvl = s[subj+'Level']; if (lvl === 'A') return subjectNames[subj]+'A'; if (lvl === 'B') return subjectNames[subj]+'B'; if (lvl === 'poor') return subjectNames[subj]+'困'; return ''; }).filter(function(b){return b;}).join(' '); data.push([s.name, s.gender, s.idcard||'', s.oldClass||'', cls.name, s.chinese, s.math, s.english, s.morality, s.science, s.total, levels, s.locked?'是':'否']); }); var ws = XLSX.utils.aoa_to_sheet(data); ws['!cols'] = [{wch:8},{wch:4},{wch:20},{wch:8},{wch:10},{wch:6},{wch:6},{wch:6},{wch:6},{wch:6},{wch:6},{wch:20},{wch:6}]; XLSX.utils.book_append_sheet(wb, ws, cls.name); }); XLSX.writeFile(wb, '分班结果.xlsx'); var _at = document.querySelector('.tab-btn.active'); if (_at && _at.getAttribute('data-tab') === 'result') activateTab('chart'); } // 导出后推进到"均衡看板"
 function exportStatsReport() { if (!classes.length) return; var subjects = ['chinese','math','english','morality','science']; var subjectNames = {chinese:'语文',math:'数学',english:'英语',morality:'道法',science:'科学'}; var wb = XLSX.utils.book_new(); var allData = [['均衡分班统计总表']]; allData.push(['班级','人数','男','女','语文均分','数学均分','英语均分','道法均分','科学均分','总分均分','A人次','B人次','学困人次','班干','特殊']); classes.forEach(function(c){var st=c.students;allData.push([c.name,st.length,st.filter(function(s){return s.gender==='男';}).length,st.filter(function(s){return s.gender==='女';}).length,+avg(st,'chinese').toFixed(2),+avg(st,'math').toFixed(2),+avg(st,'english').toFixed(2),+avg(st,'morality').toFixed(2),+avg(st,'science').toFixed(2),+avg(st,'total').toFixed(2),st.filter(function(s){return s.isA;}).length,st.filter(function(s){return s.isB;}).length,st.filter(function(s){return s.isPoor;}).length,st.filter(function(s){return s.cadre;}).length,st.filter(function(s){return s.special;}).length]);}); var sizeArr=classes.map(function(c){return c.students.length;}),maleArr=classes.map(function(c){return c.students.filter(function(s){return s.gender==='男';}).length;}),femaleArr=classes.map(function(c){return c.students.filter(function(s){return s.gender==='女';}).length;}),chineseArr=classes.map(function(c){return avg(c.students,'chinese');}),mathArr=classes.map(function(c){return avg(c.students,'math');}),englishArr=classes.map(function(c){return avg(c.students,'english');}),moralityArr=classes.map(function(c){return avg(c.students,'morality');}),scienceArr=classes.map(function(c){return avg(c.students,'science');}),totalArr=classes.map(function(c){return avg(c.students,'total');}),aArr=classes.map(function(c){return c.students.filter(function(s){return s.isA;}).length;}),bArr=classes.map(function(c){return c.students.filter(function(s){return s.isB;}).length;}),poorArr=classes.map(function(c){return c.students.filter(function(s){return s.isPoor;}).length;}),cadreArr=classes.map(function(c){return c.students.filter(function(s){return s.cadre;}).length;}),specialArr=classes.map(function(c){return c.students.filter(function(s){return s.special;}).length;}); function rd(arr){return +(Math.max.apply(null,arr)-Math.min.apply(null,arr)).toFixed(2);} function sm(arr){return arr.reduce(function(a,b){return a+b;},0);} allData.push(['合计',sm(sizeArr),sm(maleArr),sm(femaleArr),+(sm(chineseArr)/chineseArr.length).toFixed(2),+(sm(mathArr)/mathArr.length).toFixed(2),+(sm(englishArr)/englishArr.length).toFixed(2),+(sm(moralityArr)/moralityArr.length).toFixed(2),+(sm(scienceArr)/scienceArr.length).toFixed(2),+(sm(totalArr)/totalArr.length).toFixed(2),sm(aArr),sm(bArr),sm(poorArr),sm(cadreArr),sm(specialArr)]); allData.push(['极差',rd(sizeArr),rd(maleArr),rd(femaleArr),rd(chineseArr),rd(mathArr),rd(englishArr),rd(moralityArr),rd(scienceArr),rd(totalArr),rd(aArr),rd(bArr),rd(poorArr),rd(cadreArr),rd(specialArr)]); allData.push([]); allData.push(['单科等级统计']); subjects.forEach(function(subj){var sorted=students.slice().sort(function(a,b){return b[subj]-a[subj];});var total=sorted.length;var targetA=Math.round(total*0.25),targetB=Math.round(total*0.6),targetPoor=Math.round(total*0.1);var uniqueScores=[],scoreSet={};sorted.forEach(function(s){if(!scoreSet[s[subj]]){scoreSet[s[subj]]=true;uniqueScores.push(s[subj]);}});uniqueScores.sort(function(a,b){return b-a;});var aThreshold=uniqueScores[0],bestDiff=Infinity;for(var i=0;i<uniqueScores.length;i++){var cnt=0;sorted.forEach(function(s){if(s[subj]>=uniqueScores[i])cnt++;});var diff=Math.abs(cnt-targetA);if(diff<bestDiff||(diff===bestDiff&&cnt<=targetA)){bestDiff=diff;aThreshold=uniqueScores[i];}}var bThreshold=uniqueScores[0];bestDiff=Infinity;for(var i=0;i<uniqueScores.length;i++){var cnt=0;sorted.forEach(function(s){if(s[subj]>=uniqueScores[i])cnt++;});var diff=Math.abs(cnt-targetB);if(diff<bestDiff||(diff===bestDiff&&cnt<=targetB)){bestDiff=diff;bThreshold=uniqueScores[i];}}var poorThreshold=uniqueScores[uniqueScores.length-1];bestDiff=Infinity;for(var i=0;i<uniqueScores.length;i++){var cnt=0;sorted.forEach(function(s){if(s[subj]<=uniqueScores[i])cnt++;});var diff=Math.abs(cnt-targetPoor);if(diff<bestDiff||(diff===bestDiff&&cnt<=targetPoor)){bestDiff=diff;poorThreshold=uniqueScores[i];}}allData.push([subjectNames[subj]+'等级统计 (A≥'+aThreshold+' B≥'+bThreshold+' 学困≤'+poorThreshold+')']);allData.push(['班级','人数','均分','A档','B档','A+B','学困']);var subClassData=classes.map(function(c){var st=c.students;var aCnt=st.filter(function(s){return s[subj]>=aThreshold;}).length;var bCnt=st.filter(function(s){return s[subj]>=bThreshold&&s[subj]<aThreshold;}).length;var poorCnt=st.filter(function(s){return s[subj]<=poorThreshold;}).length;return[c.name,st.length,+avg(st,subj).toFixed(2),aCnt,bCnt,aCnt+bCnt,poorCnt];});subClassData.forEach(function(r){allData.push(r);});var aVals=subClassData.map(function(d){return d[3];}),bVals=subClassData.map(function(d){return d[4];}),abVals=subClassData.map(function(d){return d[5];}),poorVals=subClassData.map(function(d){return d[6];}),avgs=subClassData.map(function(d){return d[2];}),counts=subClassData.map(function(d){return d[1];});allData.push(['合计',counts.reduce(function(a,b){return a+b;},0),+(avgs.reduce(function(a,b){return a+b;},0)/avgs.length).toFixed(2),aVals.reduce(function(a,b){return a+b;},0),bVals.reduce(function(a,b){return a+b;},0),abVals.reduce(function(a,b){return a+b;},0),poorVals.reduce(function(a,b){return a+b;},0)]);allData.push(['极差',Math.max.apply(null,counts)-Math.min.apply(null,counts),+(Math.max.apply(null,avgs)-Math.min.apply(null,avgs)).toFixed(2),Math.max.apply(null,aVals)-Math.min.apply(null,aVals),Math.max.apply(null,bVals)-Math.min.apply(null,bVals),Math.max.apply(null,abVals)-Math.min.apply(null,abVals),Math.max.apply(null,poorVals)-Math.min.apply(null,poorVals)]);allData.push([]);}); var ws = XLSX.utils.aoa_to_sheet(allData); ws['!cols'] = [{wch:10},{wch:6},{wch:4},{wch:4},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:6},{wch:6},{wch:8},{wch:6},{wch:6}]; XLSX.utils.book_append_sheet(wb, ws, '均衡统计总表'); subjects.forEach(function(subj) { var data = [['班级','人数','均分','A档','B档','A+B','学困']]; var sorted = students.slice().sort(function(a,b){return b[subj]-a[subj];}); var total = sorted.length; var targetA=Math.round(total*0.25),targetB=Math.round(total*0.6),targetPoor=Math.round(total*0.1); var uniqueScores=[],scoreSet={}; sorted.forEach(function(s){if(!scoreSet[s[subj]]){scoreSet[s[subj]]=true;uniqueScores.push(s[subj]);}}); uniqueScores.sort(function(a,b){return b-a;}); var aThreshold=uniqueScores[0],bestDiff=Infinity; for(var i=0;i<uniqueScores.length;i++){var cnt=0;sorted.forEach(function(s){if(s[subj]>=uniqueScores[i])cnt++;});var diff=Math.abs(cnt-targetA);if(diff<bestDiff||(diff===bestDiff&&cnt<=targetA)){bestDiff=diff;aThreshold=uniqueScores[i];}} var bThreshold=uniqueScores[0];bestDiff=Infinity; for(var i=0;i<uniqueScores.length;i++){var cnt=0;sorted.forEach(function(s){if(s[subj]>=uniqueScores[i])cnt++;});var diff=Math.abs(cnt-targetB);if(diff<bestDiff||(diff===bestDiff&&cnt<=targetB)){bestDiff=diff;bThreshold=uniqueScores[i];}} var poorThreshold=uniqueScores[uniqueScores.length-1];bestDiff=Infinity; for(var i=0;i<uniqueScores.length;i++){var cnt=0;sorted.forEach(function(s){if(s[subj]<=uniqueScores[i])cnt++;});var diff=Math.abs(cnt-targetPoor);if(diff<bestDiff||(diff===bestDiff&&cnt<=targetPoor)){bestDiff=diff;poorThreshold=uniqueScores[i];}} classes.forEach(function(c){var st=c.students;var aCnt=st.filter(function(s){return s[subj]>=aThreshold;}).length;var bCnt=st.filter(function(s){return s[subj]>=bThreshold&&s[subj]<aThreshold;}).length;var poorCnt=st.filter(function(s){return s[subj]<=poorThreshold;}).length;data.push([c.name,st.length,+avg(st,subj).toFixed(2),aCnt,bCnt,aCnt+bCnt,poorCnt]);}); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), subjectNames[subj]+'统计'); }); XLSX.writeFile(wb, '均衡统计报表.xlsx'); }
 function copyResult() { if (!classes.length) return; var subjects = ['chinese','math','english','morality','science']; var subjectLabels = {chinese:'语',math:'数',english:'英',morality:'道',science:'科'}; var txt = '智能均衡分班结果\n'; classes.forEach(function(c) { txt += c.name + ' (' + c.students.length + '人) 总分' + avg(c.students, 'total').toFixed(2) + '\n'; c.students.forEach(function(s) { var levels = subjects.map(function(subj) { var lvl = s[subj+'Level']; if (lvl === 'A') return subjectLabels[subj]+'A'; if (lvl === 'B') return subjectLabels[subj]+'B'; if (lvl === 'poor') return subjectLabels[subj]+'困'; return ''; }).filter(function(b){return b;}).join(' '); txt += s.name + ' ' + s.total + ' ' + levels + '\n'; }); txt += '\n'; }); if (navigator.clipboard) { navigator.clipboard.writeText(txt).then(function() { showToast('已复制'); }); } }
 
 loadData(); renderStudentTable();
 if (classes.length) { renderClassResult(); renderStatsTable(); calculateVariance(); }
 </script>
-    <script data-protection="v3.6-backup">
+    <script data-protection="v3.7-backup">
 (function(){
   function _noCtx(e){ e=e||window.event; if(e)e.returnValue=false; return false; }
   document.oncontextmenu = _noCtx;
@@ -2840,31 +2985,10 @@ if (classes.length) { renderClassResult(); renderStatsTable(); calculateVariance
   }, true);
 })();
     </script>
-    <script data-protection="v3.6-guide">
-/* 下一步操作提示：根据当前状态脉冲高亮下一步该点的按钮 */
-(function(){
-  function _guide(){
-    try {
-      var cur = document.querySelector(".guide-next");
-      var target = null;
-      if (typeof students === "undefined" || students.length === 0) {
-        target = document.querySelector("button[onclick=\"generateDemoData()\"]") || document.querySelector("button[onclick=\"addStudent()\"]");
-      } else if (typeof classes === "undefined" || classes.length === 0) {
-        target = document.querySelector("button[onclick=\"startDivide()\"]");
-      } else {
-        target = document.querySelector("button[onclick=\"exportResult()\"]");
-      }
-      if (target && target !== cur) {
-        if (cur) cur.classList.remove("guide-next");
-        target.classList.add("guide-next");
-      }
-    } catch (e) {}
-  }
-  // 页面加载后每 0.8 秒检查一次状态，动态切换提示按钮
-  var _t = setInterval(_guide, 800);
-  if (document.addEventListener) document.addEventListener("DOMContentLoaded", function(){ setTimeout(_guide, 500); });
-  else setTimeout(_guide, 1000);
-})();
+    <script data-protection="v3.7-guide">
+/* 引导动画采用“按菜单互斥”模式：默认四个菜单全部闪烁；
+   点击任一菜单后，仅该菜单及其主操作按钮闪烁，其余全部停止（由 switchTab/activateTab 驱动）。
+   本脚本不再周期性覆盖引导状态，避免与菜单点击冲突。 */
     </script>
 </body>
 </html>
