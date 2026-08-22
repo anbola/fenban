@@ -341,8 +341,17 @@
         .toggle-icon.collapsed { transform: rotate(-90deg); }
         .toggle-icon { transition: transform 0.3s; display: inline-block; }
         .clickable { cursor: pointer; user-select: none; }
-        @media (max-width: 1200px) { .form-grid { grid-template-columns: repeat(5, 1fr); } .setting-row { flex-direction: column; } }
-        @media (max-width: 768px) { .form-grid { grid-template-columns: repeat(2, 1fr); } .stats-grid { grid-template-columns: repeat(2, 1fr); } .class-grid .class-card { min-width: 100% !important; max-width: 100% !important; } .header h1 { font-size: 16px; } .setting-row { flex-direction: column; } }
+        /* ============ 响应式适配：手机 / 平板 / PC 多设备自动适应 ============ */
+        /* 中等屏幕（≤1200px）：小笔记本 / 横屏平板 */
+        @media (max-width: 1200px) { .form-grid { grid-template-columns: repeat(5, 1fr); } .setting-row { flex-direction: column; } .rule-grid { grid-template-columns: repeat(4, 1fr) !important; } }
+        /* 平板横屏 / 窄窗口（≤992px） */
+        @media (max-width: 992px) { .container { padding: 12px 14px 32px; } .header { padding: 16px 22px; } .header h1 { font-size: 18px; } .form-grid { grid-template-columns: repeat(3, 1fr); } .rule-grid { grid-template-columns: repeat(3, 1fr) !important; } .stats-grid { grid-template-columns: repeat(3, 1fr); } }
+        /* 平板竖屏（≤768px） */
+        @media (max-width: 768px) { .container { padding: 10px 10px 28px; } .header { padding: 14px 16px; } .header h1 { font-size: 16px; gap: 8px; } .header-logo { height: 30px; } .tab-content { padding: 14px 12px; } .form-grid { grid-template-columns: repeat(2, 1fr); } .rule-grid { grid-template-columns: repeat(2, 1fr) !important; } .stats-grid { grid-template-columns: repeat(2, 1fr); } .class-grid .class-card { min-width: 100% !important; max-width: 100% !important; } .setting-row { flex-direction: column; } .form-row-5 { flex-wrap: wrap; } .form-row-5 > .form-group { flex: 1 1 30%; } .help-popup { width: calc(100vw - 40px); right: 8px; } .param-bar .pb-label, .data-toolbar .tb-label { width: 100%; border-right: none; padding-right: 0; margin-bottom: 4px; } .param-bar .pb-right, .data-toolbar .tb-right { margin-left: 0; width: 100%; justify-content: flex-start; flex-wrap: wrap; } #classNames { width: 100% !important; } .chart-container { overflow-x: auto; } .chart-container canvas { max-width: 100%; height: auto; } }
+        /* 大屏手机（≤640px） */
+        @media (max-width: 640px) { .tabs { gap: 4px; padding: 4px; } .tab-btn { flex: 1 1 calc(50% - 4px); justify-content: center; padding: 9px 8px; font-size: 13px; } .header { padding-right: 52px; } .header h1 { font-size: 15px; flex-wrap: wrap; } .algorithm-badge { font-size: 10px; } .form-grid { grid-template-columns: 1fr; } .rule-grid { grid-template-columns: repeat(2, 1fr) !important; } .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; } .stat-value { font-size: 18px; } .stat-label { font-size: 12px; } .form-row-5 { flex-direction: column; } .form-row-5 > .form-group { flex: 0 0 auto !important; max-width: 100% !important; } .data-toolbar .tb-btn { flex: 1 1 auto; } .param-bar .pb-group { flex: 1 1 100%; } .toast { left: 12px; right: 12px; max-width: none; top: 16px; } .chart-container { padding: 10px; } }
+        /* 小屏手机（≤480px） */
+        @media (max-width: 480px) { .header { padding: 12px 10px; padding-right: 48px; border-radius: var(--radius); } .header h1 { font-size: 14px; letter-spacing: 0; } .header-logo { height: 26px; } .tab-btn { font-size: 12px; padding: 8px 6px; gap: 5px; } .tab-num { width: 18px; height: 18px; font-size: 11px; } .tab-content { padding: 12px 8px; } .rule-grid { grid-template-columns: 1fr 1fr !important; } .stats-grid { grid-template-columns: 1fr 1fr; gap: 6px; } .btn { padding: 7px 12px; font-size: 12px; } .modal-content { padding: 16px; } .data-toolbar .tb-btn, .param-bar .pb-group { flex: 1 1 100%; } .view-toggle button { padding: 6px 10px; font-size: 11px; } }
     
 </style>
 </head>
@@ -486,7 +495,7 @@
         </div>
         <div class="card" style="margin-bottom:14px;">
             <div class="card-title"><i class="fas fa-balance-scale"></i> 均衡条件选择</div>
-            <div style="display: grid; grid-template-columns: repeat(5,1fr); gap: 8px;">
+            <div class="rule-grid" style="display: grid; grid-template-columns: repeat(5,1fr); gap: 8px;">
                 <label class="checkbox-group"><input type="checkbox" checked id="rule_gender"> 男女比例均衡</label>
                 <label class="checkbox-group"><input type="checkbox" checked id="rule_total"> 总分均衡</label>
                 <label class="checkbox-group"><input type="checkbox" checked id="rule_subject"> 各科均分均衡</label>
