@@ -509,7 +509,7 @@
             <div class="card-title"><i class="fas fa-list"></i> 学生列表 <span id="studentCount" style="font-size:12px;margin-left:10px;color:var(--text-light);"></span></div>
             <input type="text" class="form-control" id="search" placeholder="🔍 搜索姓名/身份证号" oninput="renderStudentTable()" style="margin-bottom:8px;">
             <div class="table-container">
-                <table><thead><tr><th>姓名</th><th>性别</th><th>身份证</th><th>总分</th><th>等级</th><th>指定班级</th><th>锁定</th><th>操作</th></tr></thead><tbody id="studentTbody"></tbody></table>
+                <table><thead id="studentHead"></thead><tbody id="studentTbody"></tbody></table>
             </div>
         </div>
     </div>
@@ -2119,16 +2119,33 @@ function autoAdjustWeights() {
 }
 
 function renderStudentTable() {
+    detectActiveSubjects();
+    var subjKeys = activeSubjects.slice();
+    var subjLabels = {chinese:'语',math:'数',english:'英',morality:'道',science:'科'};
+    var head = document.getElementById('studentHead');
     var tbody = document.getElementById('studentTbody');
     var search = (document.getElementById('search').value || '').toLowerCase();
     var filtered = students.filter(function(s) { return s.name.toLowerCase().includes(search) || (s.idcard || '').includes(search); });
     document.getElementById('studentCount').textContent = '共 ' + students.length + ' 名学生';
+    var headCells = ['姓名','性别','身份证号','原班级','指定新班级'];
+    subjKeys.forEach(function(k) { headCells.push(SUBJ_NAME[k]); });
+    headCells = headCells.concat(['总分','等级','特长','家庭住址','备注','特殊生','班干部','双胞胎编号','锁定','操作']);
+    head.innerHTML = '<tr>' + headCells.map(function(h) { return '<th>' + h + '</th>'; }).join('') + '</tr>';
     tbody.innerHTML = filtered.map(function(s) {
-        var idx = students.indexOf(s);
-        var subjects = ['chinese','math','english','morality','science'];
-        var subjectLabels = {chinese:'语',math:'数',english:'英',morality:'道',science:'科'};
-        var levelText = subjects.map(function(subj) { var lvl = s[subj+'Level']; if (lvl === 'A') return '<span style="color:#dc2626;">'+subjectLabels[subj]+'A</span>'; if (lvl === 'B') return '<span style="color:#d97706;">'+subjectLabels[subj]+'B</span>'; if (lvl === 'poor') return '<span style="color:#2563eb;">'+subjectLabels[subj]+'困</span>'; return ''; }).filter(function(b){return b;}).join(' ') || '普通';
-        return '<tr><td>' + s.name + '</td><td>' + s.gender + '</td><td>' + (s.idcard || '-') + '</td><td>' + s.total + '</td><td>' + levelText + '</td><td>' + (s.targetClass || '-') + '</td><td>' + (s.locked ? '🔒' : '✅') + '</td><td><button class="btn btn-secondary" style="padding:3px 7px;font-size:11px;" onclick="editStudent(' + s._uid + ')"><i class="fas fa-edit"></i></button><button class="btn btn-light" style="padding:3px 7px;font-size:11px;" onclick="deleteStudent(' + s._uid + ')"><i class="fas fa-trash"></i></button></td></tr>';
+        var levelText = subjKeys.map(function(subj) { var lvl = s[subj+'Level']; if (lvl === 'A') return '<span style="color:#dc2626;">'+subjLabels[subj]+'A</span>'; if (lvl === 'B') return '<span style="color:#d97706;">'+subjLabels[subj]+'B</span>'; if (lvl === 'poor') return '<span style="color:#2563eb;">'+subjLabels[subj]+'困</span>'; return ''; }).filter(function(b){return b;}).join(' ') || '普通';
+        var cells = [s.name, s.gender, (s.idcard || '-'), (s.oldClass || '-'), (s.targetClass || '-')];
+        subjKeys.forEach(function(k) { cells.push(s[k] != null ? s[k] : ''); });
+        cells.push(s.total);
+        cells.push(levelText);
+        cells.push(s.specialty || '-');
+        cells.push(s.address || '-');
+        cells.push(s.remark || '-');
+        cells.push(s.special ? '是' : '否');
+        cells.push(s.cadre ? '是' : '否');
+        cells.push(s.twin || '-');
+        cells.push(s.locked ? '🔒' : '✅');
+        cells.push('<button class="btn btn-secondary" style="padding:3px 7px;font-size:11px;" onclick="editStudent(' + s._uid + ')"><i class="fas fa-edit"></i></button><button class="btn btn-light" style="padding:3px 7px;font-size:11px;" onclick="deleteStudent(' + s._uid + ')"><i class="fas fa-trash"></i></button>');
+        return '<tr><td>' + cells.join('</td><td>') + '</td></tr>';
     }).join('');
 }
 
@@ -2280,7 +2297,7 @@ function addCustomField() {
   if (c.custom.indexOf(name) < 0) { c.custom.push(name); saveTemplateCustomState(c); }
   inp.value = ''; renderTemplateFieldList(c);
 }
-var TEMPLATE_BASE64 = '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';
+var TEMPLATE_BASE64 = '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';
 function downloadOpenpyxlTemplate() { var bin = atob(TEMPLATE_BASE64); var bytes = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i); var blob = new Blob([bytes], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }); var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "导入模板.xlsx"; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(a.href); }
 function downloadTemplate() { var c = loadTemplateCustom(); if (c.fields.length === TEMPLATE_FIELDS.length && c.custom.length === 0) { downloadOpenpyxlTemplate(); return; } downloadTemplateSheetJS(); }
 function downloadTemplateSheetJS() {
@@ -2356,7 +2373,7 @@ function processCSVRows(rows) {
     students = []; classes = [];
     var imported = 0, skipped = 0;
     // 表头映射：按列名匹配（兼容定制后的列序变化，及旧模板列名）
-    var header = rows[0] || [];
+    var header = (rows[0] || []).map(function(h) { return String(h).split('\n')[0].trim(); });
     var col = {};
     header.forEach(function(h, idx) { col[String(h).trim()] = idx; });
     function idx(names) { for (var i = 0; i < names.length; i++) { if (col[names[i]] !== undefined) return col[names[i]]; } return -1; }
@@ -2806,6 +2823,9 @@ function detectActiveSubjects() {
     });
 }
 
+var SUBJ_NAME = {chinese:'语文',math:'数学',english:'英语',morality:'道法',science:'科学'};
+function activeSubKeys() { detectActiveSubjects(); return activeSubjects.slice(); }
+
 var levelThresholds = {};
 function assignLevels() {
     detectActiveSubjects();
@@ -3023,15 +3043,23 @@ function startDivide() {
         };
       });
       // 锁定学生（指定班级）固定到目标班，优化器围绕其优化其余人
+      // 修复：指定新班级超出班级数/未匹配时不再误锁到第0班，改为不锁定并提示
+      var _unmatchedLocks = [];
       var fixed = students.map(function(s) {
         if (s.locked || (s.targetClass && String(s.targetClass).trim() !== '')) {
+          var _t = String(s.targetClass).trim();
+          var _tn = parseInt(_t.replace(/[^0-9]/g, ''), 10);
           for (var ci = 0; ci < classCount; ci++) {
-            if (classNames[ci] && (classNames[ci].indexOf(String(s.targetClass)) >= 0 || String(s.targetClass).indexOf(classNames[ci]) >= 0)) return ci;
+            var _cn = parseInt(String(classNames[ci] || '').replace(/[^0-9]/g, ''), 10);
+            if (!isNaN(_tn) && !isNaN(_cn) && _tn === _cn) return ci;
+            if (classNames[ci] && (classNames[ci].indexOf(_t) >= 0 || _t.indexOf(classNames[ci]) >= 0)) return ci;
           }
-          return 0;
+          _unmatchedLocks.push(s.name + '(' + _t + ')');
+          return -1;
         }
         return -1;
       });
+      if (_unmatchedLocks.length) showToast('提示：' + _unmatchedLocks.length + ' 名学生的指定新班级超出当前班级数，已按未锁定处理', 'error');
       // —— 读取 UI 权重滑块（智能预设；性别=100 即硬约束）——
       autoAdjustWeights(); // 兜底：分班前按数据智能校正权重（无此类学生归零、无成绩拉满性别）
       var wSubj = +document.getElementById('w_subj').value;
@@ -3069,7 +3097,7 @@ function startDivide() {
           for (var ci = 0; ci < classCount; ci++) {
             if (classNames[ci] && (classNames[ci].indexOf(String(s.targetClass)) >= 0 || String(s.targetClass).indexOf(classNames[ci]) >= 0)) { fixed = ci; break; }
           }
-          if (fixed < 0) fixed = 0;
+          if (fixed < 0) return;
           assign[i] = fixed;
         }
       });
@@ -3234,27 +3262,57 @@ function renderStatsTable() {
     var container = document.getElementById('compareTbody').parentElement.parentElement;
     container.querySelectorAll('.subject-stats-wrapper').forEach(function(el) { el.remove(); });
     if (!classes.length) { document.getElementById('compareTbody').innerHTML = ''; document.getElementById('compareTfoot').innerHTML = ''; return; }
+    detectActiveSubjects();
+    var subjKeys = activeSubjects.slice();
+    var integralRep = computeIntegralReport();
     var wrapper = document.createElement('div');
     wrapper.className = 'subject-stats-wrapper';
     wrapper.style.cssText = 'margin-bottom:16px;';
-    var totalCard = document.createElement('div');
-    totalCard.style.cssText = 'background:white;border-radius:8px;padding:12px;margin-bottom:10px;border:1px solid #e2e8f0;border-left:4px solid #6366f1;';
-    var totalHtml = '<div style="font-size:13px;font-weight:700;color:#4338ca;margin-bottom:8px;">总分及基本信息统计</div>';
-    totalHtml += '<table style="width:100%;border-collapse:collapse;font-size:11px;">';
-    totalHtml += '<thead><tr style="background:#eef2ff;"><th style="padding:5px 8px;border:1px solid #c7d2fe;">班级</th><th style="padding:5px 8px;border:1px solid #c7d2fe;">人数</th><th style="padding:5px 8px;border:1px solid #c7d2fe;">男</th><th style="padding:5px 8px;border:1px solid #c7d2fe;">女</th><th style="padding:5px 8px;border:1px solid #c7d2fe;">语文</th><th style="padding:5px 8px;border:1px solid #c7d2fe;">数学</th><th style="padding:5px 8px;border:1px solid #c7d2fe;">英语</th><th style="padding:5px 8px;border:1px solid #c7d2fe;">道法</th><th style="padding:5px 8px;border:1px solid #c7d2fe;">科学</th><th style="padding:5px 8px;border:1px solid #c7d2fe;">总分</th><th style="padding:5px 8px;border:1px solid #c7d2fe;">A人次</th><th style="padding:5px 8px;border:1px solid #c7d2fe;">B人次</th><th style="padding:5px 8px;border:1px solid #c7d2fe;">学困</th><th style="padding:5px 8px;border:1px solid #c7d2fe;">班干</th><th style="padding:5px 8px;border:1px solid #c7d2fe;">特殊</th></tr></thead><tbody>';
-    classes.forEach(function(c, idx) {
-        var st = c.students;
-        totalHtml += '<tr style="background:' + (idx%2===0?'#fafaff':'#fff') + ';"><td style="padding:4px 8px;border:1px solid #e0e7ff;font-weight:600;">' + c.name + '</td><td style="padding:4px 8px;border:1px solid #e0e7ff;">' + st.length + '</td><td style="padding:4px 8px;border:1px solid #e0e7ff;">' + st.filter(function(s){return s.gender==='男';}).length + '</td><td style="padding:4px 8px;border:1px solid #e0e7ff;">' + st.filter(function(s){return s.gender==='女';}).length + '</td><td style="padding:4px 8px;border:1px solid #e0e7ff;">' + avg(st,'chinese').toFixed(2) + '</td><td style="padding:4px 8px;border:1px solid #e0e7ff;">' + avg(st,'math').toFixed(2) + '</td><td style="padding:4px 8px;border:1px solid #e0e7ff;">' + avg(st,'english').toFixed(2) + '</td><td style="padding:4px 8px;border:1px solid #e0e7ff;">' + avg(st,'morality').toFixed(2) + '</td><td style="padding:4px 8px;border:1px solid #e0e7ff;">' + avg(st,'science').toFixed(2) + '</td><td style="padding:4px 8px;border:1px solid #e0e7ff;font-weight:600;">' + avg(st,'total').toFixed(2) + '</td><td style="padding:4px 8px;border:1px solid #e0e7ff;color:#dc2626;font-weight:600;">' + st.filter(function(s){return s.isA;}).length + '</td><td style="padding:4px 8px;border:1px solid #e0e7ff;color:#d97706;font-weight:600;">' + st.filter(function(s){return s.isB;}).length + '</td><td style="padding:4px 8px;border:1px solid #e0e7ff;color:#2563eb;font-weight:600;">' + st.filter(function(s){return s.isPoor;}).length + '</td><td style="padding:4px 8px;border:1px solid #e0e7ff;">' + st.filter(function(s){return s.cadre;}).length + '</td><td style="padding:4px 8px;border:1px solid #e0e7ff;">' + st.filter(function(s){return s.special;}).length + '</td></tr>';
+
+    // 积分总表卡片（直接显示在均衡看板，无需下载 Excel）
+    var integralCard = document.createElement('div');
+    integralCard.style.cssText = 'background:white;border-radius:8px;padding:12px;margin-bottom:10px;border:1px solid #e2e8f0;border-left:4px solid #f59e0b;';
+    var integralHtml = '<div style="font-size:13px;font-weight:700;color:#92400e;margin-bottom:8px;">积分总表（总积分 = 各科「人均积分+A档积分+B档积分」之和，口径与成绩核算一致）</div>';
+    integralHtml += '<table style="width:100%;border-collapse:collapse;font-size:11px;">';
+    integralHtml += '<thead><tr style="background:#fef3c7;"><th style="padding:5px 8px;border:1px solid #fde68a;">班级</th><th style="padding:5px 8px;border:1px solid #fde68a;">名次</th>';
+    integralRep.allSubs.forEach(function(subj) { if (integralRep.subjects[subj].hasScore) integralHtml += '<th style="padding:5px 8px;border:1px solid #fde68a;">' + integralRep.subjNames[subj] + '积分</th>'; });
+    integralHtml += '<th style="padding:5px 8px;border:1px solid #fde68a;background:#fde68a;">总积分</th></tr></thead><tbody>';
+    integralRep.classTotal.forEach(function(ct, idx) {
+        var row = '<tr style="background:' + (idx%2===0?'#fffbeb':'#fff') + ';"><td style="padding:4px 8px;border:1px solid #fef3c7;font-weight:600;">' + ct.className + '</td><td style="padding:4px 8px;border:1px solid #fef3c7;">' + ct.rank + '</td>';
+        integralRep.allSubs.forEach(function(subj) {
+            if (!integralRep.subjects[subj].hasScore) return;
+            var r = integralRep.subjects[subj].rows.find(function(x) { return x.className === ct.className; });
+            row += '<td style="padding:4px 8px;border:1px solid #fef3c7;">' + (r ? fmt2(r.totalScore) : 0) + '</td>';
+        });
+        row += '<td style="padding:4px 8px;border:1px solid #fde68a;background:#fde68a;font-weight:700;color:#92400e;">' + fmt2(ct.total) + '</td></tr>';
+        integralHtml += row;
     });
-    var sizeArr=classes.map(function(c){return c.students.length;}),maleArr=classes.map(function(c){return c.students.filter(function(s){return s.gender==='男';}).length;}),femaleArr=classes.map(function(c){return c.students.filter(function(s){return s.gender==='女';}).length;}),chineseArr=classes.map(function(c){return avg(c.students,'chinese');}),mathArr=classes.map(function(c){return avg(c.students,'math');}),englishArr=classes.map(function(c){return avg(c.students,'english');}),moralityArr=classes.map(function(c){return avg(c.students,'morality');}),scienceArr=classes.map(function(c){return avg(c.students,'science');}),totalArr=classes.map(function(c){return avg(c.students,'total');}),aArr=classes.map(function(c){return c.students.filter(function(s){return s.isA;}).length;}),bArr=classes.map(function(c){return c.students.filter(function(s){return s.isB;}).length;}),poorArr=classes.map(function(c){return c.students.filter(function(s){return s.isPoor;}).length;}),cadreArr=classes.map(function(c){return c.students.filter(function(s){return s.cadre;}).length;}),specialArr=classes.map(function(c){return c.students.filter(function(s){return s.special;}).length;});
-    function rd(arr){return (Math.max.apply(null,arr)-Math.min.apply(null,arr)).toFixed(2);}
-    function sm(arr){return arr.reduce(function(a,b){return a+b;},0);}
-    totalHtml += '</tbody><tfoot>';
-    totalHtml += '<tr style="background:#dbeafe;font-weight:700;color:#1e40af;"><td style="padding:4px 8px;border:1px solid #93c5fd;">合计</td><td style="padding:4px 8px;border:1px solid #93c5fd;">'+sm(sizeArr)+'</td><td style="padding:4px 8px;border:1px solid #93c5fd;">'+sm(maleArr)+'</td><td style="padding:4px 8px;border:1px solid #93c5fd;">'+sm(femaleArr)+'</td><td style="padding:4px 8px;border:1px solid #93c5fd;">'+(sm(chineseArr)/chineseArr.length).toFixed(2)+'</td><td style="padding:4px 8px;border:1px solid #93c5fd;">'+(sm(mathArr)/mathArr.length).toFixed(2)+'</td><td style="padding:4px 8px;border:1px solid #93c5fd;">'+(sm(englishArr)/englishArr.length).toFixed(2)+'</td><td style="padding:4px 8px;border:1px solid #93c5fd;">'+(sm(moralityArr)/moralityArr.length).toFixed(2)+'</td><td style="padding:4px 8px;border:1px solid #93c5fd;">'+(sm(scienceArr)/scienceArr.length).toFixed(2)+'</td><td style="padding:4px 8px;border:1px solid #93c5fd;">'+(sm(totalArr)/totalArr.length).toFixed(2)+'</td><td style="padding:4px 8px;border:1px solid #93c5fd;">'+sm(aArr)+'</td><td style="padding:4px 8px;border:1px solid #93c5fd;">'+sm(bArr)+'</td><td style="padding:4px 8px;border:1px solid #93c5fd;">'+sm(poorArr)+'</td><td style="padding:4px 8px;border:1px solid #93c5fd;">'+sm(cadreArr)+'</td><td style="padding:4px 8px;border:1px solid #93c5fd;">'+sm(specialArr)+'</td></tr>';
-    totalHtml += '<tr style="background:#fee2e2;font-weight:700;color:#991b1b;"><td style="padding:4px 8px;border:1px solid #fca5a5;">极差</td><td style="padding:4px 8px;border:1px solid #fca5a5;">'+rd(sizeArr)+'</td><td style="padding:4px 8px;border:1px solid #fca5a5;">'+rd(maleArr)+'</td><td style="padding:4px 8px;border:1px solid #fca5a5;">'+rd(femaleArr)+'</td><td style="padding:4px 8px;border:1px solid #fca5a5;">'+rd(chineseArr)+'</td><td style="padding:4px 8px;border:1px solid #fca5a5;">'+rd(mathArr)+'</td><td style="padding:4px 8px;border:1px solid #fca5a5;">'+rd(englishArr)+'</td><td style="padding:4px 8px;border:1px solid #fca5a5;">'+rd(moralityArr)+'</td><td style="padding:4px 8px;border:1px solid #fca5a5;">'+rd(scienceArr)+'</td><td style="padding:4px 8px;border:1px solid #fca5a5;">'+rd(totalArr)+'</td><td style="padding:4px 8px;border:1px solid #fca5a5;">'+rd(aArr)+'</td><td style="padding:4px 8px;border:1px solid #fca5a5;">'+rd(bArr)+'</td><td style="padding:4px 8px;border:1px solid #fca5a5;">'+rd(poorArr)+'</td><td style="padding:4px 8px;border:1px solid #fca5a5;">'+rd(cadreArr)+'</td><td style="padding:4px 8px;border:1px solid #fca5a5;">'+rd(specialArr)+'</td></tr>';
-    totalHtml += '</tfoot></table>';
-    totalCard.innerHTML = totalHtml;
-    wrapper.appendChild(totalCard);
+    integralHtml += '</tbody><tfoot>';
+    var sumRow = '<tr style="background:#dbeafe;font-weight:700;color:#1e40af;"><td style="padding:4px 8px;border:1px solid #93c5fd;">合计</td><td style="padding:4px 8px;border:1px solid #93c5fd;">-</td>';
+    integralRep.allSubs.forEach(function(subj) {
+        if (!integralRep.subjects[subj].hasScore) return;
+        var s = 0;
+        integralRep.classTotal.forEach(function(ct) {
+            var r = integralRep.subjects[subj].rows.find(function(x) { return x.className === ct.className; });
+            s += r ? r.totalScore : 0;
+        });
+        sumRow += '<td style="padding:4px 8px;border:1px solid #93c5fd;">' + fmt2(s) + '</td>';
+    });
+    sumRow += '<td style="padding:4px 8px;border:1px solid #93c5fd;">' + fmt2(integralRep.classTotal.reduce(function(a,b){return a+b.total;},0)) + '</td></tr>';
+    integralHtml += sumRow;
+    var rangeRow = '<tr style="background:#fee2e2;font-weight:700;color:#991b1b;"><td style="padding:4px 8px;border:1px solid #fca5a5;">极差</td><td style="padding:4px 8px;border:1px solid #fca5a5;">-</td>';
+    integralRep.allSubs.forEach(function(subj) {
+        if (!integralRep.subjects[subj].hasScore) return;
+        var vals = integralRep.subjects[subj].rows.map(function(r) { return r.totalScore; });
+        rangeRow += '<td style="padding:4px 8px;border:1px solid #fca5a5;">' + fmt2(Math.max.apply(null, vals) - Math.min.apply(null, vals)) + '</td>';
+    });
+    var totalVals = integralRep.classTotal.map(function(ct) { return ct.total; });
+    rangeRow += '<td style="padding:4px 8px;border:1px solid #fca5a5;background:#fecaca;">' + fmt2(Math.max.apply(null, totalVals) - Math.min.apply(null, totalVals)) + '</td></tr>';
+    integralHtml += rangeRow;
+    integralHtml += '</tfoot></table>';
+    integralCard.innerHTML = integralHtml;
+    wrapper.appendChild(integralCard);
+
     var subjects = activeSubjects.length > 0 ? activeSubjects.map(function(k) { return {key:k,name:{chinese:'语文',math:'数学',english:'英语',morality:'道法',science:'科学'}[k]}; }) : [{key:'chinese',name:'语文'},{key:'math',name:'数学'},{key:'english',name:'英语'},{key:'morality',name:'道法'},{key:'science',name:'科学'}];
     var allStudents = students.slice();
     subjects.forEach(function(subj) {
@@ -3287,11 +3345,237 @@ function renderStatsTable() {
     container.insertBefore(wrapper,container.firstChild);
 }
 
-function renderMultiChart() { var canvas = document.getElementById('balanceChart'); var ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, canvas.width, canvas.height); if (!classes.length) return; var subjects = ['语文', '数学', '英语', '道法', '科学']; var subjectKeys = ['chinese', 'math', 'english', 'morality', 'science']; var colors = ['#0d9488', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6']; var barW = Math.max(8, Math.min(25, 600 / (classes.length * 6))); var groupW = barW * 5 + 8; var gap = Math.max(10, Math.min(30, (canvas.width - 80) / classes.length - groupW)); var startX = 70, startY = 300; ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 0.5; for (var g = 0; g <= 5; g++) { var y = startY - (g * 50 * 1.5); ctx.beginPath(); ctx.moveTo(startX - 5, y); ctx.lineTo(canvas.width, y); ctx.stroke(); ctx.fillStyle = '#999'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right'; ctx.fillText(String(g * 20), startX - 8, y + 4); } classes.forEach(function(c, i) { var x = startX + i * (groupW + gap); subjectKeys.forEach(function(k, j) { var val = avg(c.students, k); ctx.fillStyle = colors[j]; ctx.fillRect(x + j * (barW + 2), startY - val * 1.5, barW, val * 1.5); }); ctx.fillStyle = '#333'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(c.name, x + groupW / 2, startY + 20); }); var legendY = 15; subjects.forEach(function(s, j) { ctx.fillStyle = colors[j]; ctx.fillRect(startX + j * 80, legendY, 12, 12); ctx.fillStyle = '#333'; ctx.font = '11px sans-serif'; ctx.textAlign = 'left'; ctx.fillText(s, startX + j * 80 + 16, legendY + 10); }); }
+function renderMultiChart() {
+    var canvas = document.getElementById('balanceChart');
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (!classes.length) return;
+    detectActiveSubjects();
+    var subjKeys = activeSubjects.slice();
+    if (!subjKeys.length) return;
+    var names = subjKeys.map(function(k) { return SUBJ_NAME[k]; });
+    var colors = ['#0d9488', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
+    var n = subjKeys.length;
+    var barW = Math.max(8, Math.min(25, 600 / (classes.length * (n + 1))));
+    var groupW = barW * n + 8;
+    var gap = Math.max(10, Math.min(30, (canvas.width - 80) / classes.length - groupW));
+    var startX = 70, startY = 300;
+    ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 0.5;
+    for (var g = 0; g <= 5; g++) { var y = startY - (g * 50 * 1.5); ctx.beginPath(); ctx.moveTo(startX - 5, y); ctx.lineTo(canvas.width, y); ctx.stroke(); ctx.fillStyle = '#999'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right'; ctx.fillText(String(g * 20), startX - 8, y + 4); }
+    classes.forEach(function(c, i) { var x = startX + i * (groupW + gap); subjKeys.forEach(function(k, j) { var val = avg(c.students, k); ctx.fillStyle = colors[j]; ctx.fillRect(x + j * (barW + 2), startY - val * 1.5, barW, val * 1.5); }); ctx.fillStyle = '#333'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(c.name, x + groupW / 2, startY + 20); });
+    var legendY = 15; names.forEach(function(s, j) { ctx.fillStyle = colors[j]; ctx.fillRect(startX + j * 80, legendY, 12, 12); ctx.fillStyle = '#333'; ctx.font = '11px sans-serif'; ctx.textAlign = 'left'; ctx.fillText(s, startX + j * 80 + 16, legendY + 10); });
+}
 
-function exportResult() { if (!classes.length) { showToast('无数据', 'error'); return; } var wb = XLSX.utils.book_new(); var subjects = ['chinese','math','english','morality','science']; var subjectNames = {chinese:'语文',math:'数学',english:'英语',morality:'道法',science:'科学'}; var allData = [['姓名','性别','身份证','原班级','新班级','语文','数学','英语','道法','科学','总分','等级','锁定']]; classes.forEach(function(cls) { cls.students.forEach(function(s) { var levels = subjects.map(function(subj) { var lvl = s[subj+'Level']; if (lvl === 'A') return subjectNames[subj]+'A'; if (lvl === 'B') return subjectNames[subj]+'B'; if (lvl === 'poor') return subjectNames[subj]+'困'; return ''; }).filter(function(b){return b;}).join(' '); allData.push([s.name, s.gender, s.idcard||'', s.oldClass||'', cls.name, s.chinese, s.math, s.english, s.morality, s.science, s.total, levels, s.locked?'是':'否']); }); }); var summaryWs = XLSX.utils.aoa_to_sheet(allData); summaryWs['!cols'] = [{wch:8},{wch:4},{wch:20},{wch:8},{wch:10},{wch:6},{wch:6},{wch:6},{wch:6},{wch:6},{wch:6},{wch:20},{wch:6}]; XLSX.utils.book_append_sheet(wb, summaryWs, '总表'); classes.forEach(function(cls) { var data = [['姓名','性别','身份证','原班级','新班级','语文','数学','英语','道法','科学','总分','等级','锁定']]; cls.students.forEach(function(s) { var levels = subjects.map(function(subj) { var lvl = s[subj+'Level']; if (lvl === 'A') return subjectNames[subj]+'A'; if (lvl === 'B') return subjectNames[subj]+'B'; if (lvl === 'poor') return subjectNames[subj]+'困'; return ''; }).filter(function(b){return b;}).join(' '); data.push([s.name, s.gender, s.idcard||'', s.oldClass||'', cls.name, s.chinese, s.math, s.english, s.morality, s.science, s.total, levels, s.locked?'是':'否']); }); var ws = XLSX.utils.aoa_to_sheet(data); ws['!cols'] = [{wch:8},{wch:4},{wch:20},{wch:8},{wch:10},{wch:6},{wch:6},{wch:6},{wch:6},{wch:6},{wch:6},{wch:20},{wch:6}]; XLSX.utils.book_append_sheet(wb, ws, cls.name); }); var _stData = [['均衡分班统计报表']]; _stData.push(['班级','人数','男','女','语文均分','数学均分','英语均分','道法均分','科学均分','总分均分','A人次','B人次','学困人次','班干','特殊']); classes.forEach(function(c){var st=c.students;_stData.push([c.name,st.length,st.filter(function(s){return s.gender==='男';}).length,st.filter(function(s){return s.gender==='女';}).length,+avg(st,'chinese').toFixed(2),+avg(st,'math').toFixed(2),+avg(st,'english').toFixed(2),+avg(st,'morality').toFixed(2),+avg(st,'science').toFixed(2),+avg(st,'total').toFixed(2),st.filter(function(s){return s.isA;}).length,st.filter(function(s){return s.isB;}).length,st.filter(function(s){return s.isPoor;}).length,st.filter(function(s){return s.cadre;}).length,st.filter(function(s){return s.special;}).length]);}); var _sz=classes.map(function(c){return c.students.length;}),_ml=classes.map(function(c){return c.students.filter(function(s){return s.gender==='男';}).length;}),_fm=classes.map(function(c){return c.students.filter(function(s){return s.gender==='女';}).length;}),_ch=classes.map(function(c){return avg(c.students,'chinese');}),_ma=classes.map(function(c){return avg(c.students,'math');}),_en=classes.map(function(c){return avg(c.students,'english');}),_mo=classes.map(function(c){return avg(c.students,'morality');}),_sc=classes.map(function(c){return avg(c.students,'science');}),_to=classes.map(function(c){return avg(c.students,'total');}),_a=classes.map(function(c){return c.students.filter(function(s){return s.isA;}).length;}),_b=classes.map(function(c){return c.students.filter(function(s){return s.isB;}).length;}),_po=classes.map(function(c){return c.students.filter(function(s){return s.isPoor;}).length;}),_ca=classes.map(function(c){return c.students.filter(function(s){return s.cadre;}).length;}),_sp=classes.map(function(c){return c.students.filter(function(s){return s.special;}).length;}); function _rd(arr){return +(Math.max.apply(null,arr)-Math.min.apply(null,arr)).toFixed(2);} function _sm(arr){return arr.reduce(function(a,b){return a+b;},0);} _stData.push(['合计',_sm(_sz),_sm(_ml),_sm(_fm),+(_sm(_ch)/_ch.length).toFixed(2),+(_sm(_ma)/_ma.length).toFixed(2),+(_sm(_en)/_en.length).toFixed(2),+(_sm(_mo)/_mo.length).toFixed(2),+(_sm(_sc)/_sc.length).toFixed(2),+(_sm(_to)/_to.length).toFixed(2),_sm(_a),_sm(_b),_sm(_po),_sm(_ca),_sm(_sp)]); _stData.push(['极差',_rd(_sz),_rd(_ml),_rd(_fm),_rd(_ch),_rd(_ma),_rd(_en),_rd(_mo),_rd(_sc),_rd(_to),_rd(_a),_rd(_b),_rd(_po),_rd(_ca),_rd(_sp)]); var _stWs=XLSX.utils.aoa_to_sheet(_stData); _stWs['!cols']=[{wch:8},{wch:6},{wch:4},{wch:4},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:6},{wch:6},{wch:8},{wch:6},{wch:6}]; XLSX.utils.book_append_sheet(wb,_stWs,'统计报表'); XLSX.writeFile(wb, '分班结果.xlsx'); var _at = document.querySelector('.tab-btn.active'); if (_at && _at.getAttribute('data-tab') === 'result') activateTab('chart'); } // 导出后推进到"均衡看板"
-function exportStatsReport() { if (!classes.length) return; var subjects = ['chinese','math','english','morality','science']; var subjectNames = {chinese:'语文',math:'数学',english:'英语',morality:'道法',science:'科学'}; var wb = XLSX.utils.book_new(); var allData = [['均衡分班统计总表']]; allData.push(['班级','人数','男','女','语文均分','数学均分','英语均分','道法均分','科学均分','总分均分','A人次','B人次','学困人次','班干','特殊']); classes.forEach(function(c){var st=c.students;allData.push([c.name,st.length,st.filter(function(s){return s.gender==='男';}).length,st.filter(function(s){return s.gender==='女';}).length,+avg(st,'chinese').toFixed(2),+avg(st,'math').toFixed(2),+avg(st,'english').toFixed(2),+avg(st,'morality').toFixed(2),+avg(st,'science').toFixed(2),+avg(st,'total').toFixed(2),st.filter(function(s){return s.isA;}).length,st.filter(function(s){return s.isB;}).length,st.filter(function(s){return s.isPoor;}).length,st.filter(function(s){return s.cadre;}).length,st.filter(function(s){return s.special;}).length]);}); var sizeArr=classes.map(function(c){return c.students.length;}),maleArr=classes.map(function(c){return c.students.filter(function(s){return s.gender==='男';}).length;}),femaleArr=classes.map(function(c){return c.students.filter(function(s){return s.gender==='女';}).length;}),chineseArr=classes.map(function(c){return avg(c.students,'chinese');}),mathArr=classes.map(function(c){return avg(c.students,'math');}),englishArr=classes.map(function(c){return avg(c.students,'english');}),moralityArr=classes.map(function(c){return avg(c.students,'morality');}),scienceArr=classes.map(function(c){return avg(c.students,'science');}),totalArr=classes.map(function(c){return avg(c.students,'total');}),aArr=classes.map(function(c){return c.students.filter(function(s){return s.isA;}).length;}),bArr=classes.map(function(c){return c.students.filter(function(s){return s.isB;}).length;}),poorArr=classes.map(function(c){return c.students.filter(function(s){return s.isPoor;}).length;}),cadreArr=classes.map(function(c){return c.students.filter(function(s){return s.cadre;}).length;}),specialArr=classes.map(function(c){return c.students.filter(function(s){return s.special;}).length;}); function rd(arr){return +(Math.max.apply(null,arr)-Math.min.apply(null,arr)).toFixed(2);} function sm(arr){return arr.reduce(function(a,b){return a+b;},0);} allData.push(['合计',sm(sizeArr),sm(maleArr),sm(femaleArr),+(sm(chineseArr)/chineseArr.length).toFixed(2),+(sm(mathArr)/mathArr.length).toFixed(2),+(sm(englishArr)/englishArr.length).toFixed(2),+(sm(moralityArr)/moralityArr.length).toFixed(2),+(sm(scienceArr)/scienceArr.length).toFixed(2),+(sm(totalArr)/totalArr.length).toFixed(2),sm(aArr),sm(bArr),sm(poorArr),sm(cadreArr),sm(specialArr)]); allData.push(['极差',rd(sizeArr),rd(maleArr),rd(femaleArr),rd(chineseArr),rd(mathArr),rd(englishArr),rd(moralityArr),rd(scienceArr),rd(totalArr),rd(aArr),rd(bArr),rd(poorArr),rd(cadreArr),rd(specialArr)]); allData.push([]); allData.push(['单科等级统计']); subjects.forEach(function(subj){var sorted=students.slice().sort(function(a,b){return b[subj]-a[subj];});var total=sorted.length;var targetA=Math.round(total*0.25),targetB=Math.round(total*0.6),targetPoor=Math.round(total*0.1);var uniqueScores=[],scoreSet={};sorted.forEach(function(s){if(!scoreSet[s[subj]]){scoreSet[s[subj]]=true;uniqueScores.push(s[subj]);}});uniqueScores.sort(function(a,b){return b-a;});var aThreshold=uniqueScores[0],bestDiff=Infinity;for(var i=0;i<uniqueScores.length;i++){var cnt=0;sorted.forEach(function(s){if(s[subj]>=uniqueScores[i])cnt++;});var diff=Math.abs(cnt-targetA);if(diff<bestDiff||(diff===bestDiff&&cnt<=targetA)){bestDiff=diff;aThreshold=uniqueScores[i];}}var bThreshold=uniqueScores[0];bestDiff=Infinity;for(var i=0;i<uniqueScores.length;i++){var cnt=0;sorted.forEach(function(s){if(s[subj]>=uniqueScores[i])cnt++;});var diff=Math.abs(cnt-targetB);if(diff<bestDiff||(diff===bestDiff&&cnt<=targetB)){bestDiff=diff;bThreshold=uniqueScores[i];}}var poorThreshold=uniqueScores[uniqueScores.length-1];bestDiff=Infinity;for(var i=0;i<uniqueScores.length;i++){var cnt=0;sorted.forEach(function(s){if(s[subj]<=uniqueScores[i])cnt++;});var diff=Math.abs(cnt-targetPoor);if(diff<bestDiff||(diff===bestDiff&&cnt<=targetPoor)){bestDiff=diff;poorThreshold=uniqueScores[i];}}allData.push([subjectNames[subj]+'等级统计 (A≥'+aThreshold+' B≥'+bThreshold+' 学困≤'+poorThreshold+')']);allData.push(['班级','人数','均分','A档','B档','A+B','学困']);var subClassData=classes.map(function(c){var st=c.students;var aCnt=st.filter(function(s){return s[subj]>=aThreshold;}).length;var bCnt=st.filter(function(s){return s[subj]>=bThreshold&&s[subj]<aThreshold;}).length;var poorCnt=st.filter(function(s){return s[subj]<=poorThreshold;}).length;return[c.name,st.length,+avg(st,subj).toFixed(2),aCnt,bCnt,aCnt+bCnt,poorCnt];});subClassData.forEach(function(r){allData.push(r);});var aVals=subClassData.map(function(d){return d[3];}),bVals=subClassData.map(function(d){return d[4];}),abVals=subClassData.map(function(d){return d[5];}),poorVals=subClassData.map(function(d){return d[6];}),avgs=subClassData.map(function(d){return d[2];}),counts=subClassData.map(function(d){return d[1];});allData.push(['合计',counts.reduce(function(a,b){return a+b;},0),+(avgs.reduce(function(a,b){return a+b;},0)/avgs.length).toFixed(2),aVals.reduce(function(a,b){return a+b;},0),bVals.reduce(function(a,b){return a+b;},0),abVals.reduce(function(a,b){return a+b;},0),poorVals.reduce(function(a,b){return a+b;},0)]);allData.push(['极差',Math.max.apply(null,counts)-Math.min.apply(null,counts),+(Math.max.apply(null,avgs)-Math.min.apply(null,avgs)).toFixed(2),Math.max.apply(null,aVals)-Math.min.apply(null,aVals),Math.max.apply(null,bVals)-Math.min.apply(null,bVals),Math.max.apply(null,abVals)-Math.min.apply(null,abVals),Math.max.apply(null,poorVals)-Math.min.apply(null,poorVals)]);allData.push([]);}); var ws = XLSX.utils.aoa_to_sheet(allData); ws['!cols'] = [{wch:10},{wch:6},{wch:4},{wch:4},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:6},{wch:6},{wch:8},{wch:6},{wch:6}]; XLSX.utils.book_append_sheet(wb, ws, '均衡统计总表'); subjects.forEach(function(subj) { var data = [['班级','人数','均分','A档','B档','A+B','学困']]; var sorted = students.slice().sort(function(a,b){return b[subj]-a[subj];}); var total = sorted.length; var targetA=Math.round(total*0.25),targetB=Math.round(total*0.6),targetPoor=Math.round(total*0.1); var uniqueScores=[],scoreSet={}; sorted.forEach(function(s){if(!scoreSet[s[subj]]){scoreSet[s[subj]]=true;uniqueScores.push(s[subj]);}}); uniqueScores.sort(function(a,b){return b-a;}); var aThreshold=uniqueScores[0],bestDiff=Infinity; for(var i=0;i<uniqueScores.length;i++){var cnt=0;sorted.forEach(function(s){if(s[subj]>=uniqueScores[i])cnt++;});var diff=Math.abs(cnt-targetA);if(diff<bestDiff||(diff===bestDiff&&cnt<=targetA)){bestDiff=diff;aThreshold=uniqueScores[i];}} var bThreshold=uniqueScores[0];bestDiff=Infinity; for(var i=0;i<uniqueScores.length;i++){var cnt=0;sorted.forEach(function(s){if(s[subj]>=uniqueScores[i])cnt++;});var diff=Math.abs(cnt-targetB);if(diff<bestDiff||(diff===bestDiff&&cnt<=targetB)){bestDiff=diff;bThreshold=uniqueScores[i];}} var poorThreshold=uniqueScores[uniqueScores.length-1];bestDiff=Infinity; for(var i=0;i<uniqueScores.length;i++){var cnt=0;sorted.forEach(function(s){if(s[subj]<=uniqueScores[i])cnt++;});var diff=Math.abs(cnt-targetPoor);if(diff<bestDiff||(diff===bestDiff&&cnt<=targetPoor)){bestDiff=diff;poorThreshold=uniqueScores[i];}} classes.forEach(function(c){var st=c.students;var aCnt=st.filter(function(s){return s[subj]>=aThreshold;}).length;var bCnt=st.filter(function(s){return s[subj]>=bThreshold&&s[subj]<aThreshold;}).length;var poorCnt=st.filter(function(s){return s[subj]<=poorThreshold;}).length;data.push([c.name,st.length,+avg(st,subj).toFixed(2),aCnt,bCnt,aCnt+bCnt,poorCnt]);}); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), subjectNames[subj]+'统计'); }); XLSX.writeFile(wb, '均衡统计报表.xlsx'); }
-function copyResult() { if (!classes.length) return; var subjects = ['chinese','math','english','morality','science']; var subjectLabels = {chinese:'语',math:'数',english:'英',morality:'道',science:'科'}; var txt = '智能均衡分班结果\n'; classes.forEach(function(c) { txt += c.name + ' (' + c.students.length + '人) 总分' + avg(c.students, 'total').toFixed(2) + '\n'; c.students.forEach(function(s) { var levels = subjects.map(function(subj) { var lvl = s[subj+'Level']; if (lvl === 'A') return subjectLabels[subj]+'A'; if (lvl === 'B') return subjectLabels[subj]+'B'; if (lvl === 'poor') return subjectLabels[subj]+'困'; return ''; }).filter(function(b){return b;}).join(' '); txt += s.name + ' ' + s.total + ' ' + levels + '\n'; }); txt += '\n'; }); if (navigator.clipboard) { navigator.clipboard.writeText(txt).then(function() { showToast('已复制'); }); } }
+function fmt2(v) { return Math.round((+v || 0) * 100) / 100; }
+function fmtPct(v) { return ((+v || 0) * 100).toFixed(1) + '%'; }
+
+// 与成绩核算系统完全一致口径：人均积分(avg/maxAvg×50) + A档积分(aRate/maxARate×20) + B档积分(bRate/maxBRate×30)
+// 6科（语/数/英/道法/科学/学科总分）单科积分之和 = 班级总积分
+function computeIntegralReport() {
+    var ratioAvg = 50, ratioA = 20, ratioB = 30, percentA = 25, percentB = 60;
+    var subjKeys = ['chinese', 'math', 'english', 'morality', 'science'];
+    var subjNames = { chinese: '语文', math: '数学', english: '英语', morality: '道法', science: '科学', total: '学科总分' };
+    var allSubs = subjKeys.concat(['total']);
+    var hasAnyScore = students.some(function(s) { return (s.total || 0) > 0; });
+    var subjects = {};
+    allSubs.forEach(function(subj) {
+        var allScores = students.map(function(s) { return subj === 'total' ? (s.total || 0) : (s[subj] || 0); });
+        var sorted = allScores.slice().sort(function(a, b) { return b - a; });
+        var subjHasScore = allScores.some(function(v) { return v > 0; });
+        var aLine = 0, bLine = 0;
+        if (subjHasScore) {
+            aLine = (FenbanCore && FenbanCore.findGradeLine) ? FenbanCore.findGradeLine(sorted, sorted.length, percentA) : 0;
+            bLine = (FenbanCore && FenbanCore.findGradeLine) ? FenbanCore.findGradeLine(sorted, sorted.length, percentB) : 0;
+        }
+        var rows = classes.map(function(c) {
+            var st = c.students || [];
+            var cnt = st.length;
+            var sum = 0, aCnt = 0, bCnt = 0;
+            st.forEach(function(s) {
+                var v = subj === 'total' ? (s.total || 0) : (s[subj] || 0);
+                sum += v;
+                if (subjHasScore && v >= aLine) aCnt++;
+                if (subjHasScore && v >= bLine) bCnt++;
+            });
+            var avg = cnt ? sum / cnt : 0;
+            return { className: c.name, cnt: cnt, avg: avg, aCnt: aCnt, bCnt: bCnt, aRate: cnt ? aCnt / cnt : 0, bRate: cnt ? bCnt / cnt : 0 };
+        });
+        var maxAvg = 0, maxARate = 0, maxBRate = 0;
+        rows.forEach(function(r) { if (r.avg > maxAvg) maxAvg = r.avg; if (r.aRate > maxARate) maxARate = r.aRate; if (r.bRate > maxBRate) maxBRate = r.bRate; });
+        rows.forEach(function(r) {
+            r.maxAvg = maxAvg;
+            r.avgScore = maxAvg > 0 ? r.avg / maxAvg * ratioAvg : 0;
+            r.maxARate = maxARate;
+            r.aScore = maxARate > 0 ? r.aRate / maxARate * ratioA : 0;
+            r.maxBRate = maxBRate;
+            r.bScore = maxBRate > 0 ? r.bRate / maxBRate * ratioB : 0;
+            r.totalScore = r.avgScore + r.aScore + r.bScore;
+        });
+        var sortedRows = rows.slice().sort(function(a, b) { return b.totalScore - a.totalScore; });
+        sortedRows.forEach(function(r, i) {
+            var rank = i + 1;
+            if (i > 0 && Math.abs(r.totalScore - sortedRows[i - 1].totalScore) < 0.0001) rank = sortedRows[i - 1].rank;
+            r.rank = rank;
+        });
+        subjects[subj] = { aLine: aLine, bLine: bLine, rows: rows, hasScore: subjHasScore };
+    });
+    var classTotal = classes.map(function(c) {
+        var total = 0;
+        allSubs.forEach(function(subj) {
+            var row = subjects[subj].rows.filter(function(r) { return r.className === c.name; })[0];
+            if (subjects[subj].hasScore && row) total += row.totalScore;
+        });
+        return { className: c.name, total: total };
+    });
+    var sortedTotal = classTotal.slice().sort(function(a, b) { return b.total - a.total; });
+    sortedTotal.forEach(function(r, i) {
+        var rank = i + 1;
+        if (i > 0 && Math.abs(r.total - sortedTotal[i - 1].total) < 0.0001) rank = sortedTotal[i - 1].rank;
+        r.rank = rank;
+    });
+    return { subjects: subjects, classTotal: classTotal, allSubs: allSubs, subjNames: subjNames, hasScore: hasAnyScore };
+}
+
+function rowOf(rep, subj, className) {
+    return rep.subjects[subj].rows.filter(function(r) { return r.className === className; })[0];
+}
+
+// 把「积分总表 + 6科积分明细表」追加到工作簿（与成绩核算系统20列明细口径一致）
+function appendBalanceDetailSheets(wb) {
+    var rep = computeIntegralReport();
+    var allSubs = rep.allSubs.filter(function(subj) { return rep.subjects[subj].hasScore; }), subjNames = rep.subjNames;
+    // 1) 积分总表：总积分作为最后一列
+    var totalHeader = ['班级', '名次'];
+    allSubs.forEach(function(subj) { totalHeader.push(subjNames[subj] + '积分'); });
+    totalHeader.push('总积分');
+    var totalData = [['均衡积分总表（总积分 = 各科「人均积分+A档积分+B档积分」之和）']];
+    totalData.push(totalHeader);
+    rep.classTotal.forEach(function(ct) {
+        var row = [ct.className, ct.rank];
+        allSubs.forEach(function(subj) { var r = rowOf(rep, subj, ct.className); row.push(r ? fmt2(r.totalScore) : 0); });
+        row.push(fmt2(ct.total));
+        totalData.push(row);
+    });
+    var sumRow = ['合计', ''];
+    allSubs.forEach(function(subj) {
+        var s = 0;
+        rep.classTotal.forEach(function(ct) { var r = rowOf(rep, subj, ct.className); s += r ? r.totalScore : 0; });
+        sumRow.push(fmt2(s));
+    });
+    sumRow.push(fmt2(rep.classTotal.reduce(function(a, b) { return a + b.total; }, 0)));
+    totalData.push(sumRow);
+    var totalWs = XLSX.utils.aoa_to_sheet(totalData);
+    totalWs['!cols'] = [{ wch: 10 }, { wch: 6 }].concat(allSubs.map(function() { return { wch: 10 }; }), [{ wch: 10 }]);
+    XLSX.utils.book_append_sheet(wb, totalWs, '积分总表');
+
+    // 2) 每科积分明细（20列，与成绩核算系统一致）
+    allSubs.forEach(function(subj) {
+        var sd = rep.subjects[subj];
+        var title = subjNames[subj] + '积分明细（人均积分+A档积分+B档积分）';
+        var header = ['班级', '科目', '实有人数', '参考人数', '人均分', '最高分', '人均积分', 'A档线', 'A档人数', 'A档比率', '最高比率', 'A档积分', 'B档线', 'B档人数', 'B档比率', '最高比率', 'B档积分', '单科总积分', '名次'];
+        var data = [[title], header];
+        sd.rows.forEach(function(r) {
+            data.push([
+                r.className, subjNames[subj], r.cnt, r.cnt,
+                fmt2(r.avg), fmt2(r.maxAvg), fmt2(r.avgScore),
+                sd.aLine, r.aCnt, fmtPct(r.aRate), fmtPct(r.maxARate), fmt2(r.aScore),
+                sd.bLine, r.bCnt, fmtPct(r.bRate), fmtPct(r.maxBRate), fmt2(r.bScore),
+                fmt2(r.totalScore), r.rank
+            ]);
+        });
+        var ws = XLSX.utils.aoa_to_sheet(data);
+        ws['!cols'] = [{ wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 7 }, { wch: 7 }, { wch: 8 }, { wch: 6 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 6 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 9 }, { wch: 6 }];
+        XLSX.utils.book_append_sheet(wb, ws, subjNames[subj] + '明细');
+    });
+}
+
+function exportResult() {
+    if (!classes.length) { showToast('无数据', 'error'); return; }
+    detectActiveSubjects();
+    var subjKeys = activeSubjects.slice();
+    var subjectNames = {chinese:'语文',math:'数学',english:'英语',morality:'道法',science:'科学'};
+    var wb = XLSX.utils.book_new();
+    var header = ['姓名','性别','身份证','原班级','新班级'];
+    subjKeys.forEach(function(k) { header.push(subjectNames[k]); });
+    header = header.concat(['总分','等级','锁定']);
+    var colW = [{wch:8},{wch:4},{wch:20},{wch:8},{wch:10}].concat(subjKeys.map(function(){ return {wch:6}; }), [{wch:6},{wch:20},{wch:6}]);
+    function buildRow(cls, s) {
+        var levels = subjKeys.map(function(subj) { var lvl = s[subj+'Level']; if (lvl === 'A') return subjectNames[subj]+'A'; if (lvl === 'B') return subjectNames[subj]+'B'; if (lvl === 'poor') return subjectNames[subj]+'困'; return ''; }).filter(function(b){return b;}).join(' ');
+        var row = [s.name, s.gender, s.idcard||'', s.oldClass||'', cls.name];
+        subjKeys.forEach(function(k) { row.push(s[k] != null ? s[k] : ''); });
+        row.push(s.total, levels, s.locked?'是':'否');
+        return row;
+    }
+    var allData = [header];
+    classes.forEach(function(cls) { cls.students.forEach(function(s) { allData.push(buildRow(cls, s)); }); });
+    var summaryWs = XLSX.utils.aoa_to_sheet(allData);
+    summaryWs['!cols'] = colW;
+    XLSX.utils.book_append_sheet(wb, summaryWs, '总表');
+    classes.forEach(function(cls) {
+        var data = [header];
+        cls.students.forEach(function(s) { data.push(buildRow(cls, s)); });
+        var ws = XLSX.utils.aoa_to_sheet(data);
+        ws['!cols'] = colW;
+        XLSX.utils.book_append_sheet(wb, ws, cls.name);
+    });
+    appendBalanceDetailSheets(wb);
+    XLSX.writeFile(wb, '分班结果.xlsx');
+    var _at = document.querySelector('.tab-btn.active');
+    if (_at && _at.getAttribute('data-tab') === 'result') activateTab('chart');
+}
+
+function exportStatsReport() {
+    if (!classes.length) return;
+    detectActiveSubjects();
+    var subjKeys = activeSubjects.slice();
+    var subjectNames = {chinese:'语文',math:'数学',english:'英语',morality:'道法',science:'科学'};
+    var wb = XLSX.utils.book_new();
+    var header = ['班级','人数','男','女'];
+    subjKeys.forEach(function(k) { header.push(subjectNames[k] + '均分'); });
+    header = header.concat(['总分均分','A人次','B人次','学困人次','班干','特殊']);
+    var allData = [['均衡分班统计总表']];
+    allData.push(header);
+    classes.forEach(function(c) {
+        var st = c.students;
+        var row = [c.name, st.length, st.filter(function(s){return s.gender==='男';}).length, st.filter(function(s){return s.gender==='女';}).length];
+        subjKeys.forEach(function(k) { row.push(+avg(st,k).toFixed(2)); });
+        row = row.concat([+avg(st,'total').toFixed(2), st.filter(function(s){return s.isA;}).length, st.filter(function(s){return s.isB;}).length, st.filter(function(s){return s.isPoor;}).length, st.filter(function(s){return s.cadre;}).length, st.filter(function(s){return s.special;}).length]);
+        allData.push(row);
+    });
+    var sizeArr=classes.map(function(c){return c.students.length;}),maleArr=classes.map(function(c){return c.students.filter(function(s){return s.gender==='男';}).length;}),femaleArr=classes.map(function(c){return c.students.filter(function(s){return s.gender==='女';}).length;}),subjArrMap={},totalArr=classes.map(function(c){return avg(c.students,'total');}),aArr=classes.map(function(c){return c.students.filter(function(s){return s.isA;}).length;}),bArr=classes.map(function(c){return c.students.filter(function(s){return s.isB;}).length;}),poorArr=classes.map(function(c){return c.students.filter(function(s){return s.isPoor;}).length;}),cadreArr=classes.map(function(c){return c.students.filter(function(s){return s.cadre;}).length;}),specialArr=classes.map(function(c){return c.students.filter(function(s){return s.special;}).length;});
+    subjKeys.forEach(function(k) { subjArrMap[k] = classes.map(function(c){ return avg(c.students,k); }); });
+    function rd(arr){return +(Math.max.apply(null,arr)-Math.min.apply(null,arr)).toFixed(2);}
+    function sm(arr){return arr.reduce(function(a,b){return a+b;},0);}
+    var sumRow = ['合计', sm(sizeArr), sm(maleArr), sm(femaleArr)];
+    subjKeys.forEach(function(k) { sumRow.push(+(sm(subjArrMap[k])/subjArrMap[k].length).toFixed(2)); });
+    sumRow = sumRow.concat([+(sm(totalArr)/totalArr.length).toFixed(2), sm(aArr), sm(bArr), sm(poorArr), sm(cadreArr), sm(specialArr)]);
+    allData.push(sumRow);
+    var rangeRow = ['极差', rd(sizeArr), rd(maleArr), rd(femaleArr)];
+    subjKeys.forEach(function(k) { rangeRow.push(rd(subjArrMap[k])); });
+    rangeRow = rangeRow.concat([rd(totalArr), rd(aArr), rd(bArr), rd(poorArr), rd(cadreArr), rd(specialArr)]);
+    allData.push(rangeRow);
+    var ws = XLSX.utils.aoa_to_sheet(allData);
+    ws['!cols'] = [{wch:10},{wch:6},{wch:4},{wch:4}].concat(subjKeys.map(function(){ return {wch:8}; }), [{wch:8},{wch:6},{wch:6},{wch:8},{wch:6},{wch:6}]);
+    XLSX.utils.book_append_sheet(wb, ws, '班级概览');
+    appendBalanceDetailSheets(wb);
+    XLSX.writeFile(wb, '均衡统计报表.xlsx');
+}
+function copyResult() {
+    if (!classes.length) return;
+    detectActiveSubjects();
+    var subjKeys = activeSubjects.slice();
+    var subjectLabels = {chinese:'语',math:'数',english:'英',morality:'道',science:'科'};
+    var txt = '智能均衡分班结果\n';
+    classes.forEach(function(c) {
+        txt += c.name + ' (' + c.students.length + '人) 总分' + avg(c.students, 'total').toFixed(2) + '\n';
+        c.students.forEach(function(s) {
+            var levels = subjKeys.map(function(subj) { var lvl = s[subj+'Level']; if (lvl === 'A') return subjectLabels[subj]+'A'; if (lvl === 'B') return subjectLabels[subj]+'B'; if (lvl === 'poor') return subjectLabels[subj]+'困'; return ''; }).filter(function(b){return b;}).join(' ');
+            txt += s.name + ' ' + s.total + ' ' + levels + '\n';
+        });
+        txt += '\n';
+    });
+    if (navigator.clipboard) { navigator.clipboard.writeText(txt).then(function() { showToast('已复制'); }); }
+}
 
 loadData(); renderStudentTable();
 if (classes.length) { renderClassResult(); renderStatsTable(); calculateVariance(); }
